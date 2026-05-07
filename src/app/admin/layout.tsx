@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { isAdmin } from "@/lib/auth";
 import { ThemeToggle } from "@/components/theme-toggle";
-import { logout } from "./actions";
+import { UserMenu } from "./user-menu";
 
 export default async function AdminLayout({
   children,
@@ -31,15 +31,9 @@ export default async function AdminLayout({
           </Link>
 
           {/* Right Actions */}
-          <div className="flex items-center gap-4 lg:gap-6">
+          <div className="flex items-center gap-4">
             <ThemeToggle />
-            {signedIn && (
-              <form action={logout} className="relative group">
-                <button className="text-sm font-medium text-neutral-600 dark:text-neutral-400 hover:text-red-600 dark:hover:text-red-400 px-3 py-2 rounded-lg transition-all duration-300 hover:bg-red-50 dark:hover:bg-red-500/10">
-                  Sign out
-                </button>
-              </form>
-            )}
+            {signedIn && <UserMenu />}
           </div>
         </div>
       </header>

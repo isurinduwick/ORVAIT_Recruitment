@@ -77,8 +77,11 @@ export default async function CandidateReview({
   return (
     <div className="space-y-8">
       <div>
-        <Link href="/admin" className="text-sm text-gray-500 dark:text-neutral-400 hover:text-gray-800 dark:text-neutral-200">
-          ← All candidates
+        <Link
+          href={candidate.job_role_id ? `/admin/roles/${candidate.job_role_id}` : "/admin"}
+          className="text-sm text-gray-500 dark:text-neutral-400 hover:text-gray-800 dark:hover:text-neutral-200"
+        >
+          ← {candidate.job_role_id ? "Back to role" : "All roles"}
         </Link>
         <div className="mt-2 flex items-end justify-between gap-4 flex-wrap">
           <div>
@@ -466,6 +469,9 @@ export default async function CandidateReview({
         </form>
         <form action={deleteCandidate} className="mt-4 pt-4 border-t border-gray-200 dark:border-neutral-800">
           <input type="hidden" name="id" value={candidate.id} />
+          {candidate.job_role_id && (
+            <input type="hidden" name="job_role_id" value={candidate.job_role_id} />
+          )}
           <button className="text-xs text-red-400 hover:text-red-300">
             Delete candidate
           </button>
