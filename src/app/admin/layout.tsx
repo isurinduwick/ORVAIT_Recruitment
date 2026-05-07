@@ -11,17 +11,31 @@ export default async function AdminLayout({
   const signedIn = await isAdmin();
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-neutral-950 text-gray-900 dark:text-neutral-100">
-      <header className="border-b border-gray-200 dark:border-neutral-800 bg-white dark:bg-neutral-900">
-        <div className="max-w-5xl mx-auto flex items-center justify-between px-6 py-3">
-          <Link href="/admin" className="font-semibold">
-            Generic Recruitment Portal
+    <div className="min-h-screen w-full bg-gradient-to-br from-slate-50 via-neutral-50 to-slate-100 dark:from-slate-950 dark:via-neutral-950 dark:to-slate-900 text-neutral-900 dark:text-neutral-100 relative overflow-hidden transition-colors duration-500">
+      {/* Background decorative elements */}
+      <div className="absolute inset-0 pointer-events-none overflow-hidden">
+        <div className="absolute top-0 right-0 w-96 h-96 bg-emerald-400/5 dark:bg-emerald-500/5 rounded-full blur-3xl"></div>
+        <div className="absolute bottom-0 left-0 w-96 h-96 bg-cyan-400/5 dark:bg-cyan-500/5 rounded-full blur-3xl"></div>
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_50%,rgba(16,185,129,0.02),transparent_70%)] dark:bg-[radial-gradient(circle_at_50%_50%,rgba(16,185,129,0.03),transparent_70%)]"></div>
+      </div>
+
+      {/* Header */}
+      <header className="sticky top-0 z-50 border-b border-neutral-200/50 dark:border-neutral-700/50 bg-white/30 dark:bg-neutral-900/30 backdrop-blur-2xl transition-all duration-500">
+        <div className="max-w-7xl mx-auto flex items-center justify-between px-6 py-4">
+          {/* Logo */}
+          <Link href="/admin" className="group flex items-center gap-2 transition-all duration-300">
+            <div className="text-2xl font-black tracking-tighter">
+              <span className="bg-gradient-to-r from-emerald-600 dark:from-emerald-400 to-cyan-600 dark:to-cyan-400 bg-clip-text text-transparent">ORVAIT</span>
+            </div>
+            <span className="text-xs font-semibold text-neutral-600 dark:text-neutral-400 group-hover:text-emerald-600 dark:group-hover:text-emerald-400 transition-colors">ADMIN</span>
           </Link>
-          <div className="flex items-center gap-3">
+
+          {/* Right Actions */}
+          <div className="flex items-center gap-4 lg:gap-6">
             <ThemeToggle />
             {signedIn && (
-              <form action={logout}>
-                <button className="text-sm text-gray-500 hover:text-gray-900 dark:text-neutral-400 dark:hover:text-neutral-100">
+              <form action={logout} className="relative group">
+                <button className="text-sm font-medium text-neutral-600 dark:text-neutral-400 hover:text-red-600 dark:hover:text-red-400 px-3 py-2 rounded-lg transition-all duration-300 hover:bg-red-50 dark:hover:bg-red-500/10">
                   Sign out
                 </button>
               </form>
@@ -29,7 +43,15 @@ export default async function AdminLayout({
           </div>
         </div>
       </header>
-      <div className="max-w-5xl mx-auto px-6 py-8">{children}</div>
+
+      {/* Main Content */}
+      <div className="relative">
+        <div className="max-w-7xl mx-auto px-6 py-12">
+          <div className="bg-white/40 dark:bg-neutral-900/40 backdrop-blur-xl rounded-3xl border border-neutral-200/50 dark:border-neutral-700/50 p-8 lg:p-12 shadow-xl dark:shadow-2xl hover:shadow-2xl dark:hover:shadow-2xl transition-shadow duration-500">
+            {children}
+          </div>
+        </div>
+      </div>
     </div>
   );
 }
