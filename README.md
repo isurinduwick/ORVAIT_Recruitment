@@ -1,4 +1,4 @@
-# Generic Recruitment Portal
+# ORVAIT Recruitment Portal
 
 A comprehensive Next.js-based application for conducting timed, proctored assessments for Senior Backend Engineer candidates. Built with Supabase for backend services, featuring automated scoring, integrity monitoring, and admin management tools.
 
