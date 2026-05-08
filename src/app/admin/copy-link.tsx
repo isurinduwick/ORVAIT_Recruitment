@@ -1,13 +1,14 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 export function CopyLink({ token }: { token: string }) {
   const [copied, setCopied] = useState(false);
-  const link =
-    typeof window !== "undefined"
-      ? `${window.location.origin}/q/${token}`
-      : `/q/${token}`;
+  const [link, setLink] = useState(`/q/${token}`);
+
+  useEffect(() => {
+    setLink(`${window.location.origin}/q/${token}`);
+  }, [token]);
 
   async function copy() {
     try {
