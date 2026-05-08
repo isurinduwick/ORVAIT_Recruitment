@@ -58,7 +58,6 @@ export default async function Questionnaire({
 
   if (!candidate) notFound();
 
-  // Load role title and questions
   let roleTitle = "Assessment";
   let assessmentQuestions: Question[] = QUESTIONS;
 
@@ -80,78 +79,144 @@ export default async function Questionnaire({
 
   if (candidate.status === "submitted") {
     return (
-      <InfoShell>
-        <h1 className="text-2xl font-semibold">Already submitted</h1>
-        <p className="text-gray-500 dark:text-neutral-400 mt-2">
-          Thank you, {candidate.name}. Your answers are in — we&apos;ll be in touch.
+      <StatusShell icon="✓" iconColor="text-emerald-400" title="Already submitted">
+        <p className="text-neutral-400 mt-2 text-sm">
+          Thank you, <span className="text-neutral-200 font-medium">{candidate.name}</span>.
+          Your answers are in — we&apos;ll be in touch soon.
         </p>
-      </InfoShell>
+      </StatusShell>
     );
   }
 
   if (
     candidate.status === "expired" ||
-    (candidate.expires_at &&
-      new Date(candidate.expires_at).getTime() < Date.now())
+    (candidate.expires_at && new Date(candidate.expires_at).getTime() < Date.now())
   ) {
     return (
-      <InfoShell>
-        <h1 className="text-2xl font-semibold">Time&apos;s up</h1>
-        <p className="text-gray-500 dark:text-neutral-400 mt-2">
+      <StatusShell icon="⏱" iconColor="text-amber-400" title="Time's up">
+        <p className="text-neutral-400 mt-2 text-sm">
           The {TIME_LIMIT_MINUTES}-minute window for this assessment has ended.
-          Please contact hello@generic.com if you believe this is an error.
+          Contact{" "}
+          <a href="mailto:hello@orvait.com" className="text-emerald-400 hover:text-emerald-300 underline underline-offset-2">
+            hello@orvait.com
+          </a>{" "}
+          if you believe this is an error.
         </p>
-      </InfoShell>
+      </StatusShell>
     );
   }
 
-  // Not started yet — show intro + start button
+  // ── Not started yet ────────────────────────────────────────────────────────
   if (candidate.status === "invited") {
     async function start() {
       "use server";
       await startAssessment(token);
     }
     const nonOptionalCount = assessmentQuestions.filter((q) => !q.optional).length;
+
     return (
-      <InfoShell>
-        <h1 className="text-2xl font-semibold">
-          {roleTitle} — Assessment
-        </h1>
-        <p className="text-gray-500 dark:text-neutral-400 mt-2">
-          Welcome, {candidate.name}. This questionnaire covers your knowledge,
-          approach to work, and salary expectations.
-        </p>
-        <ul className="mt-4 space-y-1 text-sm text-gray-700 dark:text-neutral-300 list-disc list-inside">
-          <li>You will have <strong>{TIME_LIMIT_MINUTES} minutes</strong> from the moment you click start.</li>
-          <li>{nonOptionalCount} questions + salary expectations.</li>
-          <li>You cannot pause or restart. Make sure you have a quiet block of time.</li>
-          <li>Partial answers are fine — do your best.</li>
-        </ul>
+      <main className="min-h-screen bg-neutral-950 text-neutral-100 flex items-center justify-center px-4 py-12">
+        <div className="max-w-lg w-full">
+          {/* Brand bar */}
+          <div className="mb-8 text-center">
+            <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-xs font-semibold tracking-wider uppercase mb-4">
+              <span className="h-1.5 w-1.5 rounded-full bg-emerald-400 animate-pulse" />
+              Proctored Assessment
+            </div>
+            <h1 className="text-2xl font-bold text-white">{roleTitle}</h1>
+            <p className="text-neutral-400 text-sm mt-1">
+              Welcome, <span className="text-neutral-200 font-medium">{candidate.name}</span>
+            </p>
+          </div>
 
-        {/* AI & integrity disclaimer */}
-        <div className="mt-5 rounded-lg border border-amber-400/40 bg-amber-50 dark:bg-amber-900/20 px-4 py-3">
-          <p className="text-sm font-semibold text-amber-800 dark:text-amber-300 mb-1">⚠️ Integrity notice</p>
-          <ul className="text-xs text-amber-700 dark:text-amber-400 space-y-1 list-disc list-inside">
-            <li>All answers must be your own — <strong>do not use AI tools</strong> (ChatGPT, Copilot, etc.) to generate responses.</li>
-            <li>Do not search the internet or copy answers from external sources.</li>
-            <li>Suspicious activity (tab switching, copy attempts, etc.) is logged and reviewed by the hiring team.</li>
-            <li>Dishonest answers will result in immediate disqualification.</li>
-          </ul>
+          {/* Main card */}
+          <div className="rounded-2xl border border-neutral-800 bg-neutral-900/80 backdrop-blur shadow-2xl overflow-hidden">
+            {/* Card header accent */}
+            <div className="h-0.5 w-full bg-gradient-to-r from-emerald-500 via-teal-400 to-emerald-600" />
+
+            <div className="p-6 space-y-5">
+              <p className="text-neutral-300 text-sm leading-relaxed">
+                This questionnaire covers your knowledge, approach to work, and salary expectations.
+                Once started, the timer cannot be paused.
+              </p>
+
+              {/* Rules grid */}
+              <div className="grid grid-cols-1 gap-2.5">
+                {[
+                  {
+                    icon: "⏱",
+                    text: (
+                      <>
+                        You have <strong className="text-white">{TIME_LIMIT_MINUTES} minutes</strong> from the moment you click Start.
+                      </>
+                    ),
+                  },
+                  {
+                    icon: "📝",
+                    text: (
+                      <>
+                        <strong className="text-white">{nonOptionalCount} required questions</strong> plus salary expectation.
+                      </>
+                    ),
+                  },
+                  {
+                    icon: "🔒",
+                    text: "You cannot pause, restart, or return to this assessment.",
+                  },
+                  {
+                    icon: "✏️",
+                    text: "Partial answers are accepted — do your honest best.",
+                  },
+                ].map((r, i) => (
+                  <div key={i} className="flex items-start gap-3 rounded-xl bg-neutral-800/60 px-4 py-3">
+                    <span className="text-base shrink-0 mt-0.5">{r.icon}</span>
+                    <p className="text-sm text-neutral-300 leading-snug">{r.text}</p>
+                  </div>
+                ))}
+              </div>
+
+              {/* Integrity notice */}
+              <div className="rounded-xl border border-amber-500/30 bg-amber-500/8 px-4 py-4 space-y-2">
+                <div className="flex items-center gap-2">
+                  <span className="text-amber-400 text-base">⚠️</span>
+                  <p className="text-xs font-bold text-amber-300 uppercase tracking-wider">Integrity Notice</p>
+                </div>
+                <ul className="space-y-1.5 text-xs text-amber-200/80 leading-relaxed">
+                  {[
+                    "All answers must be your own — do not use AI tools (ChatGPT, Copilot, Gemini, etc.) to generate responses.",
+                    "Do not search the internet or copy answers from any external source.",
+                    "Copying, pasting, and right-clicking are disabled and logged during the assessment.",
+                    "Suspicious behaviour (tab switching, screen capture, devtools) is monitored and reviewed.",
+                    "Dishonest answers result in immediate disqualification from the process.",
+                  ].map((item, i) => (
+                    <li key={i} className="flex items-start gap-2">
+                      <span className="text-amber-500 shrink-0 mt-0.5">›</span>
+                      <span>{item}</span>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+
+              <form action={start}>
+                <SubmitButton
+                  className="w-full rounded-xl bg-emerald-600 hover:bg-emerald-500 px-5 py-3 font-semibold text-white text-sm transition-all shadow-lg shadow-emerald-900/40 hover:shadow-emerald-800/50"
+                  loadingText="Starting assessment…"
+                >
+                  Start {TIME_LIMIT_MINUTES}-minute assessment →
+                </SubmitButton>
+              </form>
+            </div>
+          </div>
+
+          <p className="text-center text-xs text-neutral-600 mt-6">
+            By starting, you agree to complete this assessment honestly and without external assistance.
+          </p>
         </div>
-
-        <form action={start} className="mt-6">
-          <SubmitButton
-            className="rounded-md bg-emerald-600 hover:bg-emerald-500 px-5 py-2.5 font-medium text-white"
-            loadingText="Starting…"
-          >
-            Start the {TIME_LIMIT_MINUTES}-minute assessment
-          </SubmitButton>
-        </form>
-      </InfoShell>
+      </main>
     );
   }
 
-  // In progress
+  // ── In progress ────────────────────────────────────────────────────────────
   const expiresAtMs = candidate.expires_at
     ? new Date(candidate.expires_at).getTime()
     : Date.now() + TIME_LIMIT_MINUTES * 60 * 1000;
@@ -160,14 +225,18 @@ export default async function Questionnaire({
   const attitudeQs = assessmentQuestions.filter((q) => q.section === "attitude");
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-neutral-950 text-gray-900 dark:text-neutral-100">
-      <header className="sticky top-0 z-10 border-b border-gray-200 dark:border-neutral-800 bg-white/90 dark:bg-neutral-900/90 backdrop-blur">
-        <div className="max-w-3xl mx-auto px-6 py-3 flex items-center justify-between">
-          <div>
-            <p className="text-sm font-medium">{roleTitle} — Assessment</p>
-            <p className="text-xs text-gray-500 dark:text-neutral-400">{candidate.name}</p>
+    <div className="min-h-screen bg-neutral-950 text-neutral-100">
+      {/* Top gradient accent */}
+      <div className="h-0.5 w-full bg-gradient-to-r from-emerald-600 via-teal-400 to-emerald-500 fixed top-0 left-0 z-20" />
+
+      {/* Header */}
+      <header className="sticky top-0.5 z-10 border-b border-neutral-800/80 bg-neutral-950/95 backdrop-blur-md">
+        <div className="max-w-3xl mx-auto px-5 py-3 flex items-center justify-between gap-4">
+          <div className="min-w-0">
+            <p className="text-sm font-semibold text-neutral-100 truncate">{roleTitle}</p>
+            <p className="text-xs text-neutral-500 truncate">{candidate.name}</p>
           </div>
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-3 shrink-0">
             <ThemeToggle />
             <Countdown expiresAtMs={expiresAtMs} />
           </div>
@@ -176,64 +245,91 @@ export default async function Questionnaire({
 
       <Proctoring token={token} />
 
-      {/* Persistent AI integrity reminder */}
-      <div className="border-b border-amber-400/30 bg-amber-50 dark:bg-amber-900/20">
-        <div className="max-w-3xl mx-auto px-6 py-2 flex items-center gap-2 text-xs text-amber-700 dark:text-amber-400">
-          <span>⚠️</span>
-          <span><strong>Integrity reminder:</strong> Answer all questions yourself. Do not use AI tools, search engines, or external help. Suspicious activity is being monitored and logged.</span>
+      {/* Integrity ribbon */}
+      <div className="border-b border-amber-500/20 bg-amber-500/5">
+        <div className="max-w-3xl mx-auto px-5 py-2.5 flex items-center gap-2.5 text-xs text-amber-300/80">
+          <span className="shrink-0">⚠️</span>
+          <span>
+            <span className="font-semibold text-amber-300">Integrity active:</span> Copying, pasting, right-click,
+            and tab switching are monitored and blocked. Answer all questions in your own words.
+          </span>
         </div>
       </div>
 
-      <main className="max-w-3xl mx-auto px-6 py-8">
+      <main className="max-w-3xl mx-auto px-5 py-8">
         <form action={submitAssessment} className="space-y-10" id="qform">
           <input type="hidden" name="token" value={token} />
 
           {knowledgeQs.length > 0 && (
-            <Section title="Knowledge">
-              <ol className="space-y-6">
+            <AssessmentSection
+              title="Knowledge"
+              icon="🧠"
+              description="Choose or write the most accurate answer based on your professional knowledge."
+            >
+              <ol className="space-y-5">
                 {knowledgeQs.map((q, i) => (
-                  <QuestionItem key={q.id} index={i + 1} q={q} />
+                  <QuestionItem key={q.id} index={i + 1} q={q} section="knowledge" />
                 ))}
               </ol>
-            </Section>
+            </AssessmentSection>
           )}
 
           {attitudeQs.length > 0 && (
-            <Section title="Approach">
-              <ol className="space-y-6">
+            <AssessmentSection
+              title="Approach & Values"
+              icon="💡"
+              description="Describe how you think and operate in a professional environment."
+            >
+              <ol className="space-y-5">
                 {attitudeQs.map((q, i) => (
-                  <QuestionItem key={q.id} index={i + 1} q={q} />
+                  <QuestionItem key={q.id} index={i + 1} q={q} section="attitude" />
                 ))}
               </ol>
-            </Section>
+            </AssessmentSection>
           )}
 
-          <Section title="Expected salary">
-            <div className="flex items-center gap-3">
-              <input
-                type="number"
-                name="expected_salary"
-                required
-                min={1}
-                className="flex-1 rounded-md bg-gray-50 dark:bg-neutral-950 border border-gray-300 dark:border-neutral-700 px-3 py-2 text-sm"
+          <AssessmentSection
+            title="Salary Expectation"
+            icon="💼"
+            description="Your expected monthly compensation in LKR."
+          >
+            <div className="space-y-4">
+              <div className="flex items-center gap-3">
+                <div className="relative flex-1">
+                  <span className="absolute left-3 top-1/2 -translate-y-1/2 text-xs font-semibold text-neutral-500 select-none">
+                    LKR
+                  </span>
+                  <input
+                    type="number"
+                    name="expected_salary"
+                    required
+                    min={1}
+                    placeholder="e.g. 150000"
+                    className="w-full rounded-xl bg-neutral-900 border border-neutral-700 pl-12 pr-4 py-3 text-sm text-neutral-100 placeholder-neutral-600 focus:outline-none focus:ring-2 focus:ring-emerald-500/40 focus:border-emerald-500/60 transition-all"
+                  />
+                </div>
+                <input type="hidden" name="expected_salary_currency" value="LKR" />
+                <span className="text-sm text-neutral-500 whitespace-nowrap shrink-0">/ month</span>
+              </div>
+              <textarea
+                name="salary_notes"
+                rows={3}
+                placeholder="Any notes on negotiability, perks, or other expectations?"
+                className="w-full rounded-xl bg-neutral-900 border border-neutral-700 px-4 py-3 text-sm text-neutral-100 placeholder-neutral-600 focus:outline-none focus:ring-2 focus:ring-emerald-500/40 focus:border-emerald-500/60 transition-all resize-none"
+                autoComplete="off"
+                data-gramm="false"
+                data-gramm_editor="false"
+                data-enable-grammarly="false"
               />
-              <input type="hidden" name="expected_salary_currency" value="LKR" />
-              <span className="text-sm text-gray-500 dark:text-neutral-400 whitespace-nowrap">LKR / month</span>
             </div>
-            <textarea
-              name="salary_notes"
-              rows={3}
-              placeholder="Any notes on salary, negotiability, expected perks?"
-              className="mt-3 w-full rounded-md bg-white dark:bg-neutral-900 border border-gray-300 dark:border-neutral-700 px-3 py-2 text-sm"
-            />
-          </Section>
+          </AssessmentSection>
 
-          <div className="flex justify-end gap-3 pt-2">
+          <div className="flex justify-end gap-3 pt-2 pb-8">
             <SubmitButton
-              className="rounded-md bg-emerald-600 hover:bg-emerald-500 px-6 py-2.5 font-medium text-white"
+              className="rounded-xl bg-emerald-600 hover:bg-emerald-500 px-7 py-3 font-semibold text-white text-sm transition-all shadow-lg shadow-emerald-900/40 hover:shadow-emerald-800/50"
               loadingText="Submitting…"
             >
-              Submit assessment
+              Submit assessment →
             </SubmitButton>
           </div>
         </form>
@@ -242,28 +338,55 @@ export default async function Questionnaire({
   );
 }
 
-function InfoShell({ children }: { children: React.ReactNode }) {
+// ── Shared components ──────────────────────────────────────────────────────────
+
+function StatusShell({
+  icon,
+  iconColor,
+  title,
+  children,
+}: {
+  icon: string;
+  iconColor: string;
+  title: string;
+  children: React.ReactNode;
+}) {
   return (
-    <main className="min-h-screen bg-gray-50 dark:bg-neutral-950 text-gray-900 dark:text-neutral-100 flex items-center justify-center px-6">
-      <div className="max-w-md w-full bg-white dark:bg-neutral-900 border border-gray-200 dark:border-neutral-800 rounded-lg p-6">
-        {children}
+    <main className="min-h-screen bg-neutral-950 text-neutral-100 flex items-center justify-center px-6">
+      <div className="max-w-md w-full rounded-2xl border border-neutral-800 bg-neutral-900/80 backdrop-blur shadow-2xl overflow-hidden">
+        <div className="h-0.5 w-full bg-gradient-to-r from-emerald-500 via-teal-400 to-emerald-600" />
+        <div className="p-8">
+          <div className={`text-3xl mb-4 ${iconColor}`}>{icon}</div>
+          <h1 className="text-xl font-bold text-neutral-100">{title}</h1>
+          {children}
+        </div>
       </div>
     </main>
   );
 }
 
-function Section({
+function AssessmentSection({
   title,
+  icon,
+  description,
   children,
 }: {
   title: string;
+  icon: string;
+  description?: string;
   children: React.ReactNode;
 }) {
   return (
-    <section>
-      <h2 className="text-lg font-semibold mb-4 border-b border-gray-200 dark:border-neutral-800 pb-2">
-        {title}
-      </h2>
+    <section className="space-y-4">
+      <div className="border-b border-neutral-800 pb-3">
+        <div className="flex items-center gap-2.5">
+          <span className="text-lg">{icon}</span>
+          <h2 className="text-base font-bold text-neutral-100">{title}</h2>
+        </div>
+        {description && (
+          <p className="text-xs text-neutral-500 mt-1 ml-8">{description}</p>
+        )}
+      </div>
       {children}
     </section>
   );
@@ -272,42 +395,58 @@ function Section({
 function QuestionItem({
   index,
   q,
+  section,
 }: {
   index: number;
   q: Question;
+  section: "knowledge" | "attitude";
 }) {
+  const accentColor =
+    section === "knowledge"
+      ? "bg-blue-500/15 text-blue-300 border-blue-500/20"
+      : "bg-violet-500/15 text-violet-300 border-violet-500/20";
+
   return (
-    <li className="bg-white dark:bg-neutral-900 border border-gray-200 dark:border-neutral-800 rounded-lg p-4">
-      <div className="flex items-start justify-between gap-2">
-        <p className="text-sm text-gray-800 dark:text-neutral-200">
-          <span className="text-gray-400 dark:text-neutral-500">Q{index}.</span> {q.prompt}
-        </p>
-        {q.optional && (
-          <span className="shrink-0 text-xs text-gray-400 dark:text-neutral-500 border border-neutral-700 rounded px-1.5 py-0.5">
-            Optional
-          </span>
-        )}
+    <li className="rounded-2xl border border-neutral-800 bg-neutral-900/60 overflow-hidden">
+      {/* Question header */}
+      <div className="px-5 pt-5 pb-4">
+        <div className="flex items-start gap-3">
+          <div
+            className={`shrink-0 rounded-lg border px-2 py-0.5 text-xs font-bold font-mono ${accentColor}`}
+          >
+            {String(index).padStart(2, "0")}
+          </div>
+          <p className="text-sm text-neutral-200 leading-relaxed select-none flex-1">
+            {q.prompt}
+            {q.optional && (
+              <span className="ml-2 text-xs text-neutral-600 border border-neutral-700 rounded-md px-1.5 py-0.5">
+                Optional
+              </span>
+            )}
+          </p>
+        </div>
       </div>
-      <div className="mt-3">
+
+      {/* Answer area */}
+      <div className="px-5 pb-5">
         {q.type === "mcq" ? (
           <div className="space-y-2">
             {q.options.map((o) => (
               <label
                 key={o.value}
-                className="flex items-start gap-2 text-sm cursor-pointer rounded-md px-2 py-1.5
-                  text-gray-700 dark:text-neutral-300
-                  hover:bg-gray-100 hover:text-gray-900
-                  dark:hover:bg-neutral-800 dark:hover:text-neutral-100
-                  has-[:checked]:bg-emerald-50 has-[:checked]:text-emerald-800 has-[:checked]:font-medium
-                  dark:has-[:checked]:bg-emerald-900/20 dark:has-[:checked]:text-emerald-300 dark:has-[:checked]:font-medium"
+                className="flex items-start gap-3 text-sm cursor-pointer rounded-xl px-4 py-3
+                  text-neutral-400 border border-transparent
+                  hover:bg-neutral-800/80 hover:text-neutral-200 hover:border-neutral-700
+                  has-[:checked]:bg-emerald-500/10 has-[:checked]:text-emerald-200 has-[:checked]:border-emerald-500/30
+                  transition-all duration-150"
               >
                 <input
                   type="radio"
                   name={q.id}
                   value={o.value}
-                  className="mt-0.5 accent-emerald-500 shrink-0"
+                  className="mt-0.5 accent-emerald-500 shrink-0 w-4 h-4"
                 />
-                <span>{o.label}</span>
+                <span className="leading-snug">{o.label}</span>
               </label>
             ))}
           </div>
@@ -315,8 +454,14 @@ function QuestionItem({
           <textarea
             name={q.id}
             rows={4}
-            placeholder={"placeholder" in q ? q.placeholder : undefined}
-            className="w-full rounded-md bg-gray-50 dark:bg-neutral-950 border border-gray-300 dark:border-neutral-700 px-3 py-2 text-sm"
+            placeholder={"placeholder" in q ? (q as { placeholder?: string }).placeholder : "Write your answer here…"}
+            className="w-full rounded-xl bg-neutral-950/80 border border-neutral-700 px-4 py-3 text-sm text-neutral-100 placeholder-neutral-600
+              focus:outline-none focus:ring-2 focus:ring-emerald-500/40 focus:border-emerald-500/60
+              transition-all resize-none leading-relaxed"
+            autoComplete="off"
+            data-gramm="false"
+            data-gramm_editor="false"
+            data-enable-grammarly="false"
           />
         )}
       </div>

@@ -7,6 +7,7 @@ import { addCandidate } from "../../actions";
 import { CopyLink } from "../../copy-link";
 import { SubmitButton } from "@/components/submit-button";
 import { DeleteCandidateButton } from "../../delete-button";
+import { FlagPopover, type FlagEvent } from "../../flag-popover";
 
 export const dynamic = "force-dynamic";
 
@@ -74,14 +75,18 @@ export default async function RoleDetail({
 
   const scoreMap = new Map<string, ScoreSummary>();
   const flagMap = new Map<string, number>();
+  const flagEventsMap = new Map<string, FlagEvent[]>();
+
+  // Event types that are informational only — not counted as flags
+  const FLAG_SKIP = new Set(["tab_visible", "window_focus"]);
 
   if (candidateIds.length > 0) {
-    const [{ data: suspiciousData }, { data: allResponses }] = await Promise.all([
+    const [{ data: suspiciousData, error: suspErr }, { data: allResponses }] = await Promise.all([
       sb
         .from("suspicious_events")
-        .select("candidate_id, event_type")
+        .select("candidate_id, event_type, detail, occurred_at")
         .in("candidate_id", candidateIds)
-        .not("event_type", "in", '("tab_visible","window_focus")'),
+        .order("occurred_at", { ascending: true }),
       sb
         .from("responses")
         .select("candidate_id, question_id, auto_score")
@@ -89,9 +94,17 @@ export default async function RoleDetail({
         .not("auto_score", "is", null),
     ]);
 
+    if (suspErr) {
+      console.error("[role page] suspicious_events query error:", suspErr.message, suspErr.details);
+    }
     if (suspiciousData) {
       for (const ev of suspiciousData) {
-        flagMap.set(ev.candidate_id, (flagMap.get(ev.candidate_id) ?? 0) + 1);
+        if (!FLAG_SKIP.has(ev.event_type)) {
+          flagMap.set(ev.candidate_id, (flagMap.get(ev.candidate_id) ?? 0) + 1);
+          const existing = flagEventsMap.get(ev.candidate_id) ?? [];
+          existing.push({ event_type: ev.event_type, detail: ev.detail ?? null, occurred_at: ev.occurred_at });
+          flagEventsMap.set(ev.candidate_id, existing);
+        }
       }
     }
 
@@ -247,7 +260,7 @@ export default async function RoleDetail({
                   key={r.id}
                   className="bg-white dark:bg-neutral-900 border border-gray-200 dark:border-neutral-800 rounded-2xl p-4 hover:border-emerald-400/40 dark:hover:border-emerald-600/30 hover:shadow-lg hover:shadow-emerald-500/5 transition-all duration-200"
                 >
-                  {/* ── Row 1: Identity + Status + Actions ── */}
+                  {/* ── Row 1: Identity + Status + Score + Actions ── */}
                   <div className="flex items-center gap-3">
                     <div className={`w-10 h-10 rounded-xl bg-gradient-to-br ${avatarColor} flex items-center justify-center shrink-0 shadow-sm`}>
                       <span className="text-white text-xs font-bold">{initials}</span>
@@ -257,6 +270,28 @@ export default async function RoleDetail({
                       <div className="text-xs text-gray-400 dark:text-neutral-500 truncate">{r.email}</div>
                     </div>
                     <StatusPill status={r.status} />
+
+                    {/* Score badge — visible immediately in the row */}
+                    {score && TOTAL_MAX > 0 ? (
+                      <div className={`flex items-center gap-1.5 px-2.5 py-1 rounded-xl text-xs font-bold shrink-0 ${
+                        pct! >= 75
+                          ? "bg-emerald-50 dark:bg-emerald-900/20 text-emerald-600 dark:text-emerald-400"
+                          : pct! >= 50
+                          ? "bg-amber-50 dark:bg-amber-900/20 text-amber-600 dark:text-amber-400"
+                          : "bg-red-50 dark:bg-red-900/20 text-red-500 dark:text-red-400"
+                      }`}>
+                        <svg className="w-3 h-3 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+                          <path strokeLinecap="round" strokeLinejoin="round" d="M11.48 3.499a.562.562 0 011.04 0l2.125 5.111a.563.563 0 00.475.345l5.518.442c.499.04.701.663.321.988l-4.204 3.602a.563.563 0 00-.182.557l1.285 5.385a.562.562 0 01-.84.61l-4.725-2.885a.563.563 0 00-.586 0L6.982 20.54a.562.562 0 01-.84-.61l1.285-5.386a.562.562 0 00-.182-.557l-4.204-3.602a.562.562 0 01.321-.988l5.518-.442a.563.563 0 00.475-.345L11.48 3.5z" />
+                        </svg>
+                        {score.total}
+                        <span className="font-normal opacity-60">/ {TOTAL_MAX}</span>
+                      </div>
+                    ) : r.status === "submitted" ? (
+                      <span className="text-xs px-2.5 py-1 rounded-xl bg-gray-100 dark:bg-neutral-800 text-gray-400 dark:text-neutral-500 shrink-0">
+                        0 / {TOTAL_MAX}
+                      </span>
+                    ) : null}
+
                     <div className="flex items-center gap-2 shrink-0">
                       <CopyLink token={r.token} />
                       <Link
@@ -335,17 +370,11 @@ export default async function RoleDetail({
                       </span>
                     )}
 
-                    {/* Flag indicator — always visible */}
-                    <span className={`inline-flex items-center gap-1 text-xs font-semibold px-2.5 py-1 rounded-full ${
-                      flags >= 5
-                        ? "bg-red-100 dark:bg-red-900/40 text-red-600 dark:text-red-300"
-                        : flags > 0
-                        ? "bg-orange-100 dark:bg-orange-900/40 text-orange-600 dark:text-orange-300"
-                        : "bg-gray-100 dark:bg-neutral-800 text-gray-500 dark:text-neutral-400"
-                    }`}>
-                      <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M3 6a3 3 0 013-3h10a1 1 0 01.8 1.6L14.25 7l2.55 2.4A1 1 0 0116 11H6a1 1 0 00-1 1v3a1 1 0 11-2 0V6z" clipRule="evenodd" /></svg>
-                      {flags} Flag{flags !== 1 ? "s" : ""}
-                    </span>
+                    {/* Flag indicator — clickable popover */}
+                    <FlagPopover
+                      flags={flags}
+                      events={flagEventsMap.get(r.id) ?? []}
+                    />
 
                     {/* Salary */}
                     {r.expected_salary != null && (
