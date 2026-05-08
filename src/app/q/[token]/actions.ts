@@ -4,6 +4,8 @@ import { redirect } from "next/navigation";
 import { supabaseService } from "@/lib/supabase";
 import { QUESTIONS, TIME_LIMIT_MINUTES } from "@/lib/questions";
 
+type ScoredQuestion = { id: string; type: string; correct?: string };
+
 export async function startAssessment(token: string) {
   const sb = supabaseService();
   const now = new Date();
@@ -37,7 +39,7 @@ export async function submitAssessment(formData: FormData) {
 
   const { data: c } = await sb
     .from("candidates")
-    .select("id, status, expires_at")
+    .select("id, status, expires_at, job_role_id")
     .eq("token", token)
     .maybeSingle();
   if (!c) return;
@@ -46,8 +48,24 @@ export async function submitAssessment(formData: FormData) {
   const expired =
     c.expires_at && new Date(c.expires_at).getTime() < Date.now();
 
+  // Load role-specific questions if available, else fall back to hardcoded
+  let questionsToScore: ScoredQuestion[] = QUESTIONS;
+
+  if (c.job_role_id) {
+    const { data: role } = await sb
+      .from("job_roles")
+      .select("questions")
+      .eq("id", c.job_role_id)
+      .maybeSingle();
+
+    const rqs = role?.questions as ScoredQuestion[] | null;
+    if (Array.isArray(rqs) && rqs.length > 0) {
+      questionsToScore = rqs;
+    }
+  }
+
   // Save every answer
-  const rows = QUESTIONS.map((q) => {
+  const rows = questionsToScore.map((q) => {
     const answer = String(formData.get(q.id) || "");
     let auto_score: number | null = null;
     if (q.type === "mcq" && q.correct) {

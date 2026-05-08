@@ -1,6 +1,6 @@
 import { notFound } from "next/navigation";
 import { supabaseService } from "@/lib/supabase";
-import { QUESTIONS, TIME_LIMIT_MINUTES } from "@/lib/questions";
+import { QUESTIONS, TIME_LIMIT_MINUTES, type Question } from "@/lib/questions";
 import { startAssessment, submitAssessment } from "./actions";
 import { Countdown } from "./countdown";
 import { ThemeToggle } from "@/components/theme-toggle";
@@ -8,6 +8,39 @@ import { SubmitButton } from "@/components/submit-button";
 import { Proctoring } from "./proctoring";
 
 export const dynamic = "force-dynamic";
+
+type RoleQuestion = {
+  id: string;
+  type: "mcq" | "open";
+  section: "knowledge" | "attitude";
+  prompt: string;
+  options: { value: string; label: string }[];
+  correct: string;
+  optional: boolean;
+};
+
+function normalizeRoleQuestions(roleQs: RoleQuestion[]): Question[] {
+  return roleQs.map((q): Question => {
+    if (q.type === "mcq") {
+      return {
+        id: q.id,
+        section: q.section,
+        type: "mcq",
+        prompt: q.prompt,
+        options: q.options,
+        correct: q.correct || undefined,
+        optional: q.optional || undefined,
+      };
+    }
+    return {
+      id: q.id,
+      section: q.section,
+      type: "text",
+      prompt: q.prompt,
+      optional: q.optional || undefined,
+    };
+  });
+}
 
 export default async function Questionnaire({
   params,
@@ -19,11 +52,31 @@ export default async function Questionnaire({
 
   const { data: candidate } = await sb
     .from("candidates")
-    .select("id, name, email, status, started_at, expires_at, submitted_at")
+    .select("id, name, email, status, started_at, expires_at, submitted_at, job_role_id")
     .eq("token", token)
     .maybeSingle();
 
   if (!candidate) notFound();
+
+  // Load role title and questions
+  let roleTitle = "Assessment";
+  let assessmentQuestions: Question[] = QUESTIONS;
+
+  if (candidate.job_role_id) {
+    const { data: role } = await sb
+      .from("job_roles")
+      .select("title, questions")
+      .eq("id", candidate.job_role_id)
+      .maybeSingle();
+
+    if (role) {
+      roleTitle = role.title;
+      const rqs = role.questions as RoleQuestion[] | null;
+      if (Array.isArray(rqs) && rqs.length > 0) {
+        assessmentQuestions = normalizeRoleQuestions(rqs);
+      }
+    }
+  }
 
   if (candidate.status === "submitted") {
     return (
@@ -58,10 +111,11 @@ export default async function Questionnaire({
       "use server";
       await startAssessment(token);
     }
+    const nonOptionalCount = assessmentQuestions.filter((q) => !q.optional).length;
     return (
       <InfoShell>
         <h1 className="text-2xl font-semibold">
-          Senior Backend Engineer — Assessment
+          {roleTitle} — Assessment
         </h1>
         <p className="text-gray-500 dark:text-neutral-400 mt-2">
           Welcome, {candidate.name}. This questionnaire covers your knowledge,
@@ -69,7 +123,7 @@ export default async function Questionnaire({
         </p>
         <ul className="mt-4 space-y-1 text-sm text-gray-700 dark:text-neutral-300 list-disc list-inside">
           <li>You will have <strong>{TIME_LIMIT_MINUTES} minutes</strong> from the moment you click start.</li>
-          <li>{QUESTIONS.filter(q => !q.optional).length} questions + 2 optional written questions + salary expectations.</li>
+          <li>{nonOptionalCount} questions + salary expectations.</li>
           <li>You cannot pause or restart. Make sure you have a quiet block of time.</li>
           <li>Partial answers are fine — do your best.</li>
         </ul>
@@ -102,15 +156,15 @@ export default async function Questionnaire({
     ? new Date(candidate.expires_at).getTime()
     : Date.now() + TIME_LIMIT_MINUTES * 60 * 1000;
 
-  const knowledgeQs = QUESTIONS.filter((q) => q.section === "knowledge");
-  const attitudeQs = QUESTIONS.filter((q) => q.section === "attitude");
+  const knowledgeQs = assessmentQuestions.filter((q) => q.section === "knowledge");
+  const attitudeQs = assessmentQuestions.filter((q) => q.section === "attitude");
 
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-neutral-950 text-gray-900 dark:text-neutral-100">
       <header className="sticky top-0 z-10 border-b border-gray-200 dark:border-neutral-800 bg-white/90 dark:bg-neutral-900/90 backdrop-blur">
         <div className="max-w-3xl mx-auto px-6 py-3 flex items-center justify-between">
           <div>
-            <p className="text-sm font-medium">Generic Assessment</p>
+            <p className="text-sm font-medium">{roleTitle} — Assessment</p>
             <p className="text-xs text-gray-500 dark:text-neutral-400">{candidate.name}</p>
           </div>
           <div className="flex items-center gap-3">
@@ -134,21 +188,25 @@ export default async function Questionnaire({
         <form action={submitAssessment} className="space-y-10" id="qform">
           <input type="hidden" name="token" value={token} />
 
-          <Section title="Knowledge">
-            <ol className="space-y-6">
-              {knowledgeQs.map((q, i) => (
-                <QuestionItem key={q.id} index={i + 1} q={q} />
-              ))}
-            </ol>
-          </Section>
+          {knowledgeQs.length > 0 && (
+            <Section title="Knowledge">
+              <ol className="space-y-6">
+                {knowledgeQs.map((q, i) => (
+                  <QuestionItem key={q.id} index={i + 1} q={q} />
+                ))}
+              </ol>
+            </Section>
+          )}
 
-          <Section title="Approach">
-            <ol className="space-y-6">
-              {attitudeQs.map((q, i) => (
-                <QuestionItem key={q.id} index={i + 1} q={q} />
-              ))}
-            </ol>
-          </Section>
+          {attitudeQs.length > 0 && (
+            <Section title="Approach">
+              <ol className="space-y-6">
+                {attitudeQs.map((q, i) => (
+                  <QuestionItem key={q.id} index={i + 1} q={q} />
+                ))}
+              </ol>
+            </Section>
+          )}
 
           <Section title="Expected salary">
             <div className="flex items-center gap-3">
@@ -216,7 +274,7 @@ function QuestionItem({
   q,
 }: {
   index: number;
-  q: (typeof QUESTIONS)[number];
+  q: Question;
 }) {
   return (
     <li className="bg-white dark:bg-neutral-900 border border-gray-200 dark:border-neutral-800 rounded-lg p-4">
@@ -257,7 +315,7 @@ function QuestionItem({
           <textarea
             name={q.id}
             rows={4}
-            placeholder={q.placeholder}
+            placeholder={"placeholder" in q ? q.placeholder : undefined}
             className="w-full rounded-md bg-gray-50 dark:bg-neutral-950 border border-gray-300 dark:border-neutral-700 px-3 py-2 text-sm"
           />
         )}

@@ -10,16 +10,6 @@ import { DeleteCandidateButton } from "../../delete-button";
 
 export const dynamic = "force-dynamic";
 
-const knowledgeMCQIds = new Set(
-  QUESTIONS.filter((q) => q.section === "knowledge" && q.type === "mcq").map((q) => q.id)
-);
-const attitudeMCQIds = new Set(
-  QUESTIONS.filter((q) => q.section === "attitude" && q.type === "mcq").map((q) => q.id)
-);
-const KNOWLEDGE_MAX = knowledgeMCQIds.size;
-const ATTITUDE_MAX = attitudeMCQIds.size;
-const TOTAL_MAX = KNOWLEDGE_MAX + ATTITUDE_MAX;
-
 type Row = {
   id: string;
   name: string;
@@ -49,11 +39,27 @@ export default async function RoleDetail({
 
   const { data: role } = await sb
     .from("job_roles")
-    .select("id, title, description")
+    .select("id, title, description, questions")
     .eq("id", roleId)
     .maybeSingle();
 
   if (!role) notFound();
+
+  // Derive MCQ question IDs from role-specific questions (if set) or fall back to hardcoded
+  type RoleQ = { id: string; type: string; section: string };
+  const roleQs = Array.isArray(role.questions) && (role.questions as RoleQ[]).length > 0
+    ? (role.questions as RoleQ[])
+    : null;
+
+  const knowledgeMCQIds = new Set(
+    (roleQs ?? QUESTIONS).filter((q) => q.section === "knowledge" && q.type === "mcq").map((q) => q.id)
+  );
+  const attitudeMCQIds = new Set(
+    (roleQs ?? QUESTIONS).filter((q) => q.section === "attitude" && q.type === "mcq").map((q) => q.id)
+  );
+  const KNOWLEDGE_MAX = knowledgeMCQIds.size;
+  const ATTITUDE_MAX = attitudeMCQIds.size;
+  const TOTAL_MAX = KNOWLEDGE_MAX + ATTITUDE_MAX;
 
   const { data } = await sb
     .from("candidates")

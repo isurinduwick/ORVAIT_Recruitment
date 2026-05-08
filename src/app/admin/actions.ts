@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { supabaseService } from "@/lib/supabase";
 import { isAdmin, signOutAdmin } from "@/lib/auth";
+import { sendInviteEmail } from "@/lib/email";
 
 async function requireAdmin() {
   if (!(await isAdmin())) redirect("/admin/login");
@@ -65,8 +66,32 @@ export async function addCandidate(formData: FormData) {
   const job_role_id = String(formData.get("job_role_id") || "").trim() || null;
   if (!name || !email) return;
   const sb = supabaseService();
-  const { error } = await sb.from("candidates").insert({ name, email, job_role_id });
+
+  const { data: candidate, error } = await sb
+    .from("candidates")
+    .insert({ name, email, job_role_id })
+    .select("token")
+    .single();
   if (error) throw new Error(error.message);
+
+  if (candidate?.token) {
+    let roleTitle = "the position";
+    if (job_role_id) {
+      const { data: role } = await sb
+        .from("job_roles")
+        .select("title")
+        .eq("id", job_role_id)
+        .maybeSingle();
+      if (role?.title) roleTitle = role.title;
+    }
+    await sendInviteEmail({
+      candidateName: name,
+      candidateEmail: email,
+      roleTitle,
+      token: candidate.token,
+    });
+  }
+
   if (job_role_id) revalidatePath(`/admin/roles/${job_role_id}`);
   revalidatePath("/admin");
 }
