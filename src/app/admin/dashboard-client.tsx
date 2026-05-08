@@ -21,12 +21,9 @@ export type RoleData = {
 
 type Props = {
   roles: RoleData[];
-  totalCandidates: number;
-  totalSubmitted: number;
-  totalShortlisted: number;
 };
 
-export function DashboardClient({ roles, totalCandidates, totalSubmitted, totalShortlisted }: Props) {
+export function DashboardClient({ roles }: Props) {
   const [search, setSearch] = useState("");
   const [showModal, setShowModal] = useState(false);
 
@@ -43,14 +40,8 @@ export function DashboardClient({ roles, totalCandidates, totalSubmitted, totalS
       {showModal && <CreateRoleModal onClose={() => setShowModal(false)} />}
 
       <div className="space-y-8">
-        {/* Top bar: stats + create button */}
-        <div className="flex items-center justify-between gap-4 flex-wrap">
-          <div className="flex gap-3 flex-wrap">
-            <StatChip label="Candidates" value={totalCandidates} />
-            <StatChip label="Submitted" value={totalSubmitted} accent="amber" />
-            <StatChip label="Shortlisted" value={totalShortlisted} accent="emerald" />
-          </div>
-
+        {/* Top bar: create button */}
+        <div className="flex items-center justify-end gap-4 flex-wrap">
           <button
             onClick={() => setShowModal(true)}
             className="inline-flex items-center gap-2 rounded-full bg-white dark:bg-neutral-900 border border-gray-200 dark:border-neutral-700 hover:border-emerald-400/60 dark:hover:border-emerald-600/60 px-4 py-2 text-sm font-semibold text-gray-700 dark:text-neutral-200 shadow-sm hover:shadow-md hover:shadow-emerald-500/10 transition-all duration-200"
@@ -213,28 +204,6 @@ export function DashboardClient({ roles, totalCandidates, totalSubmitted, totalS
         )}
       </div>
     </>
-  );
-}
-
-function StatChip({
-  label,
-  value,
-  accent,
-}: {
-  label: string;
-  value: number;
-  accent?: "amber" | "emerald";
-}) {
-  const styles = {
-    amber: "bg-amber-50 dark:bg-amber-900/10 text-amber-600 dark:text-amber-400 border-amber-200/60 dark:border-amber-700/30",
-    emerald: "bg-emerald-50 dark:bg-emerald-900/10 text-emerald-600 dark:text-emerald-400 border-emerald-200/60 dark:border-emerald-700/30",
-  };
-  const base = "bg-white dark:bg-neutral-900 text-gray-700 dark:text-neutral-200 border-gray-200 dark:border-neutral-800";
-  return (
-    <div className={`border rounded-2xl px-4 py-3 min-w-[76px] shadow-sm ${accent ? styles[accent] : base}`}>
-      <p className="text-2xl font-bold leading-none">{value}</p>
-      <p className="text-[10px] uppercase tracking-widest opacity-60 mt-1">{label}</p>
-    </div>
   );
 }
 

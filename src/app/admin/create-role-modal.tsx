@@ -54,10 +54,10 @@ export function CreateRoleModal({ onClose }: { onClose: () => void }) {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ roleTitle: title, roleDescription: description }),
       });
-      if (!res.ok) throw new Error();
-      const { questions: gen, error: apiErr } = await res.json();
-      if (apiErr) throw new Error(apiErr);
-      const withIds = (gen as Omit<Question, "id">[]).map((q) => ({
+      const payload = await res.json();
+      if (!res.ok || payload.error) throw new Error(payload.error ?? `HTTP ${res.status}`);
+      const gen = payload.questions as Omit<Question, "id">[];
+      const withIds = gen.map((q) => ({
         ...q,
         id: Math.random().toString(36).slice(2),
         options: q.options ?? [],
@@ -65,8 +65,8 @@ export function CreateRoleModal({ onClose }: { onClose: () => void }) {
         optional: q.optional ?? false,
       }));
       setQuestions((prev) => [...prev, ...withIds]);
-    } catch {
-      setError("AI generation failed. Check your ANTHROPIC_API_KEY in .env.local.");
+    } catch (err) {
+      setError(`Failed to generate questions. Please try again. (${err instanceof Error ? err.message : String(err)})`);
     } finally {
       setGenerating(false);
     }
@@ -118,7 +118,7 @@ export function CreateRoleModal({ onClose }: { onClose: () => void }) {
       className="fixed inset-0 z-50 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4"
       onClick={(e) => { if (e.target === e.currentTarget) onClose(); }}
     >
-      <div className="bg-white dark:bg-neutral-900 rounded-2xl shadow-2xl shadow-black/20 w-full max-w-2xl max-h-[90vh] flex flex-col border border-gray-200/60 dark:border-neutral-700/60">
+      <div className="bg-white dark:bg-neutral-900 rounded-2xl shadow-2xl shadow-black/20 w-full max-w-2xl max-h-[98vh] flex flex-col border border-gray-200/60 dark:border-neutral-700/60">
 
         {/* Header */}
         <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100 dark:border-neutral-800 shrink-0">

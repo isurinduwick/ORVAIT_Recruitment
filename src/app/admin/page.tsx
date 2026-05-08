@@ -25,6 +25,7 @@ export default async function AdminHome() {
 
   const candidateList: CandidateStat[] = (candidates ?? []) as CandidateStat[];
 
+
   const statsRecord: Record<string, { total: number; submitted: number; shortlisted: number; in_progress: number }> = {};
   for (const c of candidateList) {
     if (!c.job_role_id) continue;
@@ -45,16 +46,9 @@ export default async function AdminHome() {
     stats: statsRecord[r.id] ?? { total: 0, submitted: 0, shortlisted: 0, in_progress: 0 },
   }));
 
-  const totalCandidates = candidateList.length;
-  const totalSubmitted = candidateList.filter((c) => c.status === "submitted").length;
-  const totalShortlisted = candidateList.filter((c) => c.shortlisted === true).length;
-
   return (
     <DashboardClient
       roles={roleList}
-      totalCandidates={totalCandidates}
-      totalSubmitted={totalSubmitted}
-      totalShortlisted={totalShortlisted}
     />
   );
 }
