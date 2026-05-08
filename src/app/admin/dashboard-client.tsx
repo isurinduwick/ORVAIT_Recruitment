@@ -2,7 +2,8 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { CreateRoleModal } from "./create-role-modal";
+import { CreateRoleModal, type Question } from "./create-role-modal";
+import { EditRoleModal } from "./edit-role-modal";
 import { DeleteJobRoleButton } from "./delete-role-button";
 
 export type RoleData = {
@@ -11,6 +12,7 @@ export type RoleData = {
   description: string | null;
   created_at: string;
   questionCount: number;
+  questions: Question[];
   stats: {
     total: number;
     submitted: number;
@@ -26,6 +28,7 @@ type Props = {
 export function DashboardClient({ roles }: Props) {
   const [search, setSearch] = useState("");
   const [showModal, setShowModal] = useState(false);
+  const [editingRole, setEditingRole] = useState<RoleData | null>(null);
 
   const filtered = search.trim()
     ? roles.filter(
@@ -38,6 +41,9 @@ export function DashboardClient({ roles }: Props) {
   return (
     <>
       {showModal && <CreateRoleModal onClose={() => setShowModal(false)} />}
+      {editingRole && (
+        <EditRoleModal role={editingRole} onClose={() => setEditingRole(null)} />
+      )}
 
       <div className="space-y-8">
         {/* Top bar: create button */}
@@ -149,7 +155,18 @@ export function DashboardClient({ roles }: Props) {
                         {role.description ?? <span className="italic text-gray-300 dark:text-neutral-700">No description</span>}
                       </p>
                     </div>
-                    <DeleteJobRoleButton id={role.id} title={role.title} />
+                    <div className="flex items-center gap-1 shrink-0">
+                      <button
+                        onClick={() => setEditingRole(role)}
+                        className="w-7 h-7 rounded-lg hover:bg-blue-50 dark:hover:bg-blue-900/20 flex items-center justify-center text-gray-400 hover:text-blue-500 transition-colors"
+                        title="Edit role"
+                      >
+                        <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                          <path strokeLinecap="round" strokeLinejoin="round" d="M16.862 4.487l1.687-1.688a1.875 1.875 0 112.652 2.652L10.582 16.07a4.5 4.5 0 01-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 011.13-1.897l8.932-8.931zm0 0L19.5 7.125" />
+                        </svg>
+                      </button>
+                      <DeleteJobRoleButton id={role.id} title={role.title} />
+                    </div>
                   </div>
 
                   {/* Question count badge */}

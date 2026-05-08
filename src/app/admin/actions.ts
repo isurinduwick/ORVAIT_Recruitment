@@ -27,6 +27,27 @@ export async function createJobRole(formData: FormData) {
   revalidatePath("/admin");
 }
 
+export async function updateJobRole(formData: FormData) {
+  await requireAdmin();
+  const id = String(formData.get("id") || "").trim();
+  const title = String(formData.get("title") || "").trim();
+  const description = String(formData.get("description") || "").trim();
+  const questionsRaw = String(formData.get("questions") || "[]");
+  if (!id || !title) return;
+
+  let questions = [];
+  try { questions = JSON.parse(questionsRaw); } catch { /* ignore malformed */ }
+
+  const sb = supabaseService();
+  const { error } = await sb
+    .from("job_roles")
+    .update({ title, description: description || null, questions })
+    .eq("id", id);
+  if (error) throw new Error(error.message);
+  revalidatePath("/admin");
+  revalidatePath(`/admin/roles/${id}`);
+}
+
 export async function deleteJobRole(formData: FormData) {
   await requireAdmin();
   const id = String(formData.get("id") || "");

@@ -2,50 +2,38 @@
 
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
-import { createJobRole } from "./actions";
+import { updateJobRole } from "./actions";
+import { type Question, blankQuestion, QuestionCard } from "./create-role-modal";
 
-type Option = { value: string; label: string };
-export type Question = {
-  id: string;
-  type: "mcq" | "open";
-  section: "knowledge" | "attitude";
-  prompt: string;
-  options: Option[];
-  correct: string;
-  optional: boolean;
+type EditRoleModalProps = {
+  role: {
+    id: string;
+    title: string;
+    description: string | null;
+    questions: Question[];
+  };
+  onClose: () => void;
 };
 
-export function blankQuestion(): Question {
-  return {
-    id: Math.random().toString(36).slice(2),
-    type: "mcq",
-    section: "knowledge",
-    prompt: "",
-    options: [
-      { value: "a", label: "" },
-      { value: "b", label: "" },
-      { value: "c", label: "" },
-      { value: "d", label: "" },
-    ],
-    correct: "a",
-    optional: false,
-  };
-}
-
-export function CreateRoleModal({ onClose }: { onClose: () => void }) {
+export function EditRoleModal({ role, onClose }: EditRoleModalProps) {
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
-  const [title, setTitle] = useState("");
-  const [description, setDescription] = useState("");
-  const [questions, setQuestions] = useState<Question[]>([]);
+  const [title, setTitle] = useState(role.title);
+  const [description, setDescription] = useState(role.description ?? "");
+  const [questions, setQuestions] = useState<Question[]>(() =>
+    role.questions.map((q) => ({
+      ...q,
+      id: q.id || Math.random().toString(36).slice(2),
+      options: q.options ?? [],
+      correct: q.correct ?? "",
+      optional: q.optional ?? false,
+    }))
+  );
   const [generating, setGenerating] = useState(false);
   const [error, setError] = useState("");
 
   async function generateWithAI() {
-    if (!title.trim()) {
-      setError("Enter a role title first.");
-      return;
-    }
+    if (!title.trim()) { setError("Enter a role title first."); return; }
     setError("");
     setGenerating(true);
     try {
@@ -66,24 +54,17 @@ export function CreateRoleModal({ onClose }: { onClose: () => void }) {
       }));
       setQuestions((prev) => [...prev, ...withIds]);
     } catch (err) {
-      setError(`Failed to generate questions. Please try again. (${err instanceof Error ? err.message : String(err)})`);
+      setError(`Failed to generate questions. (${err instanceof Error ? err.message : String(err)})`);
     } finally {
       setGenerating(false);
     }
   }
 
-  function addQuestion() {
-    setQuestions((prev) => [...prev, blankQuestion()]);
-  }
-
-  function removeQuestion(id: string) {
-    setQuestions((prev) => prev.filter((q) => q.id !== id));
-  }
-
+  function addQuestion() { setQuestions((prev) => [...prev, blankQuestion()]); }
+  function removeQuestion(id: string) { setQuestions((prev) => prev.filter((q) => q.id !== id)); }
   function updateQuestion(id: string, updates: Partial<Question>) {
     setQuestions((prev) => prev.map((q) => (q.id === id ? { ...q, ...updates } : q)));
   }
-
   function updateOption(qId: string, optIdx: number, label: string) {
     setQuestions((prev) =>
       prev.map((q) => {
@@ -99,16 +80,17 @@ export function CreateRoleModal({ onClose }: { onClose: () => void }) {
     e.preventDefault();
     if (!title.trim()) return;
     const fd = new FormData();
+    fd.set("id", role.id);
     fd.set("title", title);
     fd.set("description", description);
     fd.set("questions", JSON.stringify(questions));
     startTransition(async () => {
       try {
-        await createJobRole(fd);
+        await updateJobRole(fd);
         router.refresh();
         onClose();
       } catch {
-        setError("Failed to create role. Please try again.");
+        setError("Failed to save changes. Please try again.");
       }
     });
   }
@@ -123,9 +105,9 @@ export function CreateRoleModal({ onClose }: { onClose: () => void }) {
         {/* Header */}
         <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100 dark:border-neutral-800 shrink-0">
           <div>
-            <h2 className="font-bold text-base">Create Job Role</h2>
+            <h2 className="font-bold text-base">Edit Job Role</h2>
             <p className="text-xs text-gray-400 dark:text-neutral-500 mt-0.5">
-              Define the role and its assessment questions
+              Update the role details and assessment questions
             </p>
           </div>
           <button
@@ -254,7 +236,9 @@ export function CreateRoleModal({ onClose }: { onClose: () => void }) {
           {/* Footer */}
           <div className="px-6 py-4 border-t border-gray-100 dark:border-neutral-800 flex items-center justify-between gap-3 shrink-0">
             <p className="text-xs text-gray-400 dark:text-neutral-600">
-              {questions.length > 0 ? `${questions.length} question${questions.length !== 1 ? "s" : ""} will be saved with this role` : "You can add questions later"}
+              {questions.length > 0
+                ? `${questions.length} question${questions.length !== 1 ? "s" : ""} will be saved`
+                : "No questions — you can add them later"}
             </p>
             <div className="flex items-center gap-2">
               <button
@@ -269,111 +253,12 @@ export function CreateRoleModal({ onClose }: { onClose: () => void }) {
                 disabled={isPending || !title.trim()}
                 className="px-5 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 disabled:opacity-50 disabled:cursor-not-allowed text-sm font-semibold text-white shadow-sm shadow-emerald-500/20 transition-all"
               >
-                {isPending ? "Creating…" : "Create Role"}
+                {isPending ? "Saving…" : "Save Changes"}
               </button>
             </div>
           </div>
         </form>
       </div>
-    </div>
-  );
-}
-
-export function QuestionCard({
-  question,
-  index,
-  onUpdate,
-  onUpdateOption,
-  onRemove,
-}: {
-  question: Question;
-  index: number;
-  onUpdate: (u: Partial<Question>) => void;
-  onUpdateOption: (optIdx: number, label: string) => void;
-  onRemove: () => void;
-}) {
-  const sectionColor = question.section === "knowledge"
-    ? "bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400"
-    : "bg-amber-100 dark:bg-amber-900/30 text-amber-600 dark:text-amber-400";
-
-  return (
-    <div className="rounded-xl border border-gray-200 dark:border-neutral-800 bg-gray-50/50 dark:bg-neutral-800/30 p-4 space-y-3">
-      {/* Card header */}
-      <div className="flex items-center gap-2">
-        <span className="w-6 h-6 rounded-full bg-white dark:bg-neutral-800 border border-gray-200 dark:border-neutral-700 flex items-center justify-center text-xs font-bold text-gray-500 dark:text-neutral-400 shrink-0">
-          {index + 1}
-        </span>
-        <select
-          value={question.section}
-          onChange={(e) => onUpdate({ section: e.target.value as "knowledge" | "attitude" })}
-          className={`rounded-lg px-2 py-1 text-xs font-medium border-0 focus:outline-none focus:ring-1 focus:ring-emerald-500 cursor-pointer ${sectionColor}`}
-        >
-          <option value="knowledge">Knowledge</option>
-          <option value="attitude">Attitude</option>
-        </select>
-        <select
-          value={question.type}
-          onChange={(e) => onUpdate({ type: e.target.value as "mcq" | "open" })}
-          className="rounded-lg bg-white dark:bg-neutral-800 border border-gray-200 dark:border-neutral-700 px-2 py-1 text-xs focus:outline-none focus:ring-1 focus:ring-emerald-500"
-        >
-          <option value="mcq">Multiple Choice</option>
-          <option value="open">Open Ended</option>
-        </select>
-        <div className="flex-1" />
-        <button
-          type="button"
-          onClick={onRemove}
-          className="w-6 h-6 rounded-lg hover:bg-red-50 dark:hover:bg-red-900/20 flex items-center justify-center text-gray-300 dark:text-neutral-700 hover:text-red-500 transition-colors"
-        >
-          <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-            <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
-          </svg>
-        </button>
-      </div>
-
-      {/* Prompt */}
-      <textarea
-        value={question.prompt}
-        onChange={(e) => onUpdate({ prompt: e.target.value })}
-        placeholder="Enter your question here…"
-        rows={2}
-        className="w-full rounded-xl bg-white dark:bg-neutral-800 border border-gray-200 dark:border-neutral-700 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 resize-none placeholder:text-gray-400 dark:placeholder:text-neutral-600"
-      />
-
-      {/* MCQ options */}
-      {question.type === "mcq" && (
-        <div className="space-y-2">
-          {question.options.map((opt, i) => (
-            <div key={opt.value} className="flex items-center gap-2.5">
-              <button
-                type="button"
-                onClick={() => onUpdate({ correct: opt.value })}
-                className={`w-4 h-4 rounded-full border-2 flex items-center justify-center shrink-0 transition-all ${
-                  question.correct === opt.value
-                    ? "border-emerald-500 bg-emerald-500 shadow-sm shadow-emerald-500/30"
-                    : "border-gray-300 dark:border-neutral-600 hover:border-emerald-400"
-                }`}
-              >
-                {question.correct === opt.value && (
-                  <div className="w-1.5 h-1.5 rounded-full bg-white" />
-                )}
-              </button>
-              <span className="text-[10px] font-bold text-gray-400 dark:text-neutral-500 uppercase w-3">
-                {opt.value}
-              </span>
-              <input
-                value={opt.label}
-                onChange={(e) => onUpdateOption(i, e.target.value)}
-                placeholder={`Option ${opt.value.toUpperCase()}`}
-                className="flex-1 rounded-lg bg-white dark:bg-neutral-800 border border-gray-200 dark:border-neutral-700 px-2.5 py-1.5 text-xs focus:outline-none focus:ring-1 focus:ring-emerald-500 placeholder:text-gray-400 dark:placeholder:text-neutral-600"
-              />
-            </div>
-          ))}
-          <p className="text-[10px] text-gray-400 dark:text-neutral-600 pl-6.5">
-            Click the circle to mark the correct answer
-          </p>
-        </div>
-      )}
     </div>
   );
 }

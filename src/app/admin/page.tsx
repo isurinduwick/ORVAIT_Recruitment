@@ -43,6 +43,7 @@ export default async function AdminHome() {
     description: r.description as string | null,
     created_at: r.created_at,
     questionCount: Array.isArray(r.questions) ? r.questions.length : 0,
+    questions: Array.isArray(r.questions) ? r.questions : [],
     stats: statsRecord[r.id] ?? { total: 0, submitted: 0, shortlisted: 0, in_progress: 0 },
   }));
 
