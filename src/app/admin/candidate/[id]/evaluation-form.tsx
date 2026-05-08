@@ -69,39 +69,39 @@ export function EvaluationForm({
         {/* Ratings */}
         <div className="grid sm:grid-cols-2 gap-4">
           <div className="space-y-1.5">
-            <label className="text-xs font-semibold text-neutral-400 uppercase tracking-wider">
+            <label className="text-xs font-semibold text-gray-500 dark:text-neutral-400 uppercase tracking-wider">
               Knowledge rating (1–5)
             </label>
             <input
               type="number" min={1} max={5} name="knowledge_rating"
               defaultValue={defaultKnowledge ?? ""}
               placeholder="—"
-              className="w-full rounded-xl bg-neutral-800/80 border border-neutral-700 px-4 py-2.5 text-sm text-neutral-100 focus:outline-none focus:ring-2 focus:ring-emerald-500/40 focus:border-emerald-500/60 transition-all"
+              className="w-full rounded-xl bg-gray-100 dark:bg-neutral-800/80 border border-gray-300 dark:border-neutral-700 px-4 py-2.5 text-sm text-gray-900 dark:text-neutral-100 focus:outline-none focus:ring-2 focus:ring-emerald-500/40 focus:border-emerald-500/60 transition-all"
             />
           </div>
           <div className="space-y-1.5">
-            <label className="text-xs font-semibold text-neutral-400 uppercase tracking-wider">
+            <label className="text-xs font-semibold text-gray-500 dark:text-neutral-400 uppercase tracking-wider">
               Attitude rating (1–5)
             </label>
             <input
               type="number" min={1} max={5} name="attitude_rating"
               defaultValue={defaultAttitude ?? ""}
               placeholder="—"
-              className="w-full rounded-xl bg-neutral-800/80 border border-neutral-700 px-4 py-2.5 text-sm text-neutral-100 focus:outline-none focus:ring-2 focus:ring-emerald-500/40 focus:border-emerald-500/60 transition-all"
+              className="w-full rounded-xl bg-gray-100 dark:bg-neutral-800/80 border border-gray-300 dark:border-neutral-700 px-4 py-2.5 text-sm text-gray-900 dark:text-neutral-100 focus:outline-none focus:ring-2 focus:ring-emerald-500/40 focus:border-emerald-500/60 transition-all"
             />
           </div>
         </div>
 
         {/* Shortlist */}
         <div className="space-y-1.5">
-          <label className="text-xs font-semibold text-neutral-400 uppercase tracking-wider">
+          <label className="text-xs font-semibold text-gray-500 dark:text-neutral-400 uppercase tracking-wider">
             Shortlist decision
           </label>
           <div className="grid grid-cols-3 gap-2">
             {[
-              { value: "",    label: "Undecided", cls: "border-neutral-700 text-neutral-400 has-[:checked]:border-neutral-500 has-[:checked]:bg-neutral-800 has-[:checked]:text-neutral-200" },
-              { value: "yes", label: "✓ Shortlist", cls: "border-emerald-800/50 text-emerald-600 has-[:checked]:border-emerald-500 has-[:checked]:bg-emerald-900/30 has-[:checked]:text-emerald-300" },
-              { value: "no",  label: "✗ Reject",   cls: "border-red-900/40 text-red-600 has-[:checked]:border-red-500 has-[:checked]:bg-red-900/20 has-[:checked]:text-red-300" },
+              { value: "",    label: "Undecided",   cls: "border-gray-300 dark:border-neutral-700 text-gray-500 dark:text-neutral-400 has-[:checked]:border-gray-400 dark:has-[:checked]:border-neutral-500 has-[:checked]:bg-gray-100 dark:has-[:checked]:bg-neutral-800 has-[:checked]:text-gray-700 dark:has-[:checked]:text-neutral-200" },
+              { value: "yes", label: "✓ Shortlist", cls: "border-emerald-300 dark:border-emerald-800/50 text-emerald-600 has-[:checked]:border-emerald-500 has-[:checked]:bg-emerald-50 dark:has-[:checked]:bg-emerald-900/30 has-[:checked]:text-emerald-700 dark:has-[:checked]:text-emerald-300" },
+              { value: "no",  label: "✗ Reject",    cls: "border-red-200 dark:border-red-900/40 text-red-500 dark:text-red-600 has-[:checked]:border-red-400 dark:has-[:checked]:border-red-500 has-[:checked]:bg-red-50 dark:has-[:checked]:bg-red-900/20 has-[:checked]:text-red-700 dark:has-[:checked]:text-red-300" },
             ].map((opt) => (
               <label
                 key={opt.value}
@@ -125,14 +125,14 @@ export function EvaluationForm({
 
         {/* Notes */}
         <div className="space-y-1.5">
-          <label className="text-xs font-semibold text-neutral-400 uppercase tracking-wider">
+          <label className="text-xs font-semibold text-gray-500 dark:text-neutral-400 uppercase tracking-wider">
             Admin notes
           </label>
           <textarea
             name="admin_notes" rows={4}
             defaultValue={defaultNotes ?? ""}
             placeholder="Internal notes visible only to the hiring team…"
-            className="w-full rounded-xl bg-neutral-800/80 border border-neutral-700 px-4 py-3 text-sm text-neutral-100 placeholder-neutral-600 focus:outline-none focus:ring-2 focus:ring-emerald-500/40 focus:border-emerald-500/60 transition-all resize-none"
+            className="w-full rounded-xl bg-gray-100 dark:bg-neutral-800/80 border border-gray-300 dark:border-neutral-700 px-4 py-3 text-sm text-gray-900 dark:text-neutral-100 placeholder-gray-400 dark:placeholder-neutral-600 focus:outline-none focus:ring-2 focus:ring-emerald-500/40 focus:border-emerald-500/60 transition-all resize-none"
           />
         </div>
 
@@ -160,7 +160,7 @@ export function EvaluationForm({
             {jobRoleId && <input type="hidden" name="job_role_id" value={jobRoleId} />}
             <button
               type="submit"
-              className="text-xs text-neutral-600 hover:text-red-400 transition-colors"
+              className="text-xs text-gray-400 dark:text-neutral-600 hover:text-red-500 dark:hover:text-red-400 transition-colors"
             >
               Delete candidate
             </button>
