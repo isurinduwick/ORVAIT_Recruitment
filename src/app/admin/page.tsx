@@ -1,6 +1,7 @@
 import { redirect } from "next/navigation";
 import { isAdmin } from "@/lib/auth";
 import { supabaseService } from "@/lib/supabase";
+import { expireOverdueCandidates } from "@/lib/expire-candidates";
 import { DashboardClient } from "./dashboard-client";
 
 export const dynamic = "force-dynamic";
@@ -14,6 +15,8 @@ type CandidateStat = {
 export default async function AdminHome() {
   if (!(await isAdmin())) redirect("/admin/login");
   const sb = supabaseService();
+
+  await expireOverdueCandidates();
 
   const [{ data: roles }, { data: candidates }] = await Promise.all([
     sb

@@ -3,6 +3,7 @@ import Link from "next/link";
 import { isAdmin } from "@/lib/auth";
 import { supabaseService } from "@/lib/supabase";
 import { QUESTIONS } from "@/lib/questions";
+import { expireOverdueCandidates } from "@/lib/expire-candidates";
 import { addCandidate } from "../../actions";
 import { CopyLink } from "../../copy-link";
 import { SubmitButton } from "@/components/submit-button";
@@ -37,6 +38,9 @@ export default async function RoleDetail({
   if (!(await isAdmin())) redirect("/admin/login");
   const { roleId } = await params;
   const sb = supabaseService();
+
+  // Flip any in_progress candidates whose timer has run out before we render
+  await expireOverdueCandidates();
 
   const { data: role } = await sb
     .from("job_roles")

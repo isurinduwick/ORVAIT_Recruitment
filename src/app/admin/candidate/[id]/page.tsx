@@ -2,6 +2,7 @@ import { notFound, redirect } from "next/navigation";
 import Link from "next/link";
 import { isAdmin } from "@/lib/auth";
 import { supabaseService } from "@/lib/supabase";
+import { expireOverdueCandidates } from "@/lib/expire-candidates";
 import { QUESTIONS, type Question } from "@/lib/questions";
 import { uploadCV } from "../../actions";
 import { EvaluationForm } from "./evaluation-form";
@@ -74,6 +75,8 @@ export default async function CandidateReview({
   if (!(await isAdmin())) redirect("/admin/login");
   const { id } = await params;
   const sb = supabaseService();
+
+  await expireOverdueCandidates();
 
   const { data: candidate } = await sb
     .from("candidates").select("*").eq("id", id).maybeSingle();
