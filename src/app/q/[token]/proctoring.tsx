@@ -1,7 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState, useCallback } from "react";
-import { createPortal } from "react-dom";
+import { useEffect, useRef, useCallback } from "react";
 
 type EventPayload = { token: string; type: string; detail: string };
 
@@ -27,33 +26,15 @@ async function logEvent(payload: EventPayload) {
   }
 }
 
-type Severity = "info" | "warn" | "danger";
-type Toast = { id: number; message: string; severity: Severity };
-
 export function Proctoring({ token }: { token: string }) {
   const blurCount = useRef(0);
   const tabHideCount = useRef(0);
-  const [toasts, setToasts] = useState<Toast[]>([]);
-  const [violations, setViolations] = useState(0);
-  const [showCriticalModal, setShowCriticalModal] = useState(false);
-  const toastIdRef = useRef(0);
-  const violationRef = useRef(0);
-
-  const addToast = useCallback((message: string, severity: Severity) => {
-    const id = ++toastIdRef.current;
-    setToasts((prev) => [...prev.slice(-3), { id, message, severity }]);
-    setTimeout(() => setToasts((prev) => prev.filter((t) => t.id !== id)), 5000);
-  }, []);
 
   const flag = useCallback(
-    (type: string, detail: string, severity: Severity = "warn", message?: string) => {
+    (type: string, detail: string) => {
       logEvent({ token, type, detail });
-      violationRef.current++;
-      setViolations(violationRef.current);
-      if (violationRef.current >= 8) setShowCriticalModal(true);
-      if (message) addToast(message, severity);
     },
-    [token, addToast]
+    [token]
   );
 
   useEffect(() => {
@@ -63,12 +44,7 @@ export function Proctoring({ token }: { token: string }) {
     function onVisibilityChange() {
       if (document.visibilityState === "hidden") {
         tabHideCount.current++;
-        flag(
-          "tab_hidden",
-          `Tab hidden (count: ${tabHideCount.current})`,
-          tabHideCount.current >= 3 ? "danger" : "warn",
-          `Tab switch #${tabHideCount.current} recorded — this assessment is monitored.`
-        );
+        flag("tab_hidden", `Tab hidden (count: ${tabHideCount.current})`);
       } else {
         send("tab_visible", "Returned to tab");
       }
@@ -77,12 +53,7 @@ export function Proctoring({ token }: { token: string }) {
     // ── Window focus ────────────────────────────────────────────────────────
     function onBlur() {
       blurCount.current++;
-      flag(
-        "window_blur",
-        `Window lost focus (count: ${blurCount.current})`,
-        "warn",
-        `Window focus lost (${blurCount.current}). Please stay on this page.`
-      );
+      flag("window_blur", `Window lost focus (count: ${blurCount.current})`);
     }
     function onFocus() {
       send("window_focus", "Window regained focus");
@@ -93,12 +64,7 @@ export function Proctoring({ token }: { token: string }) {
       const sel = window.getSelection()?.toString().trim() ?? "";
       if (sel.length > 0) {
         e.preventDefault();
-        flag(
-          "copy_attempt",
-          `Copy blocked — ${sel.length} chars`,
-          "danger",
-          "Copying content is not allowed. This attempt has been recorded."
-        );
+        flag("copy_attempt", `Copy blocked — ${sel.length} chars`);
       }
     }
 
@@ -108,12 +74,7 @@ export function Proctoring({ token }: { token: string }) {
       const tag = t.tagName;
       if (tag === "TEXTAREA" || (tag === "INPUT" && (t as HTMLInputElement).type !== "hidden")) {
         e.preventDefault();
-        flag(
-          "paste_attempt",
-          "Paste blocked in answer field",
-          "danger",
-          "Pasting is not allowed. All answers must be typed manually."
-        );
+        flag("paste_attempt", "Paste blocked in answer field");
       }
     }
 
@@ -122,12 +83,7 @@ export function Proctoring({ token }: { token: string }) {
       const t = e.target as HTMLElement;
       if (t.tagName === "TEXTAREA" || t.tagName === "INPUT") {
         e.preventDefault();
-        flag(
-          "drag_drop_attempt",
-          "Drag-drop blocked in answer field",
-          "danger",
-          "Drag and drop is not allowed in answer fields."
-        );
+        flag("drag_drop_attempt", "Drag-drop blocked in answer field");
       }
     }
     function onDragOver(e: DragEvent) {
@@ -140,7 +96,7 @@ export function Proctoring({ token }: { token: string }) {
     // ── BLOCK right-click ──────────────────────────────────────────────────
     function onContextMenu(e: MouseEvent) {
       e.preventDefault();
-      flag("right_click", `Right-click at (${e.clientX}, ${e.clientY})`, "warn");
+      flag("right_click", `Right-click at (${e.clientX}, ${e.clientY})`);
     }
 
     // ── BLOCK / log keyboard shortcuts ─────────────────────────────────────
@@ -150,30 +106,30 @@ export function Proctoring({ token }: { token: string }) {
       const shift = e.shiftKey;
 
       if (key === "PrintScreen") {
-        flag("print_screen", "PrintScreen key pressed", "danger", "Screenshots are not permitted during the assessment.");
+        flag("print_screen", "PrintScreen key pressed");
         return;
       }
       if (ctrl && key === "p") {
         e.preventDefault();
-        flag("print_attempt", "Print blocked (Ctrl+P)", "danger", "Printing is not permitted.");
+        flag("print_attempt", "Print blocked (Ctrl+P)");
         return;
       }
       if (ctrl && key === "s") {
         e.preventDefault();
-        flag("save_attempt", "Save page blocked (Ctrl+S)", "warn");
+        flag("save_attempt", "Save page blocked (Ctrl+S)");
         return;
       }
       if (ctrl && key === "u") {
         e.preventDefault();
-        flag("view_source", "View source blocked (Ctrl+U)", "warn");
+        flag("view_source", "View source blocked (Ctrl+U)");
         return;
       }
       if (ctrl && shift && (key === "3" || key === "4" || key === "5")) {
-        flag("screenshot_shortcut", `Mac screenshot: Cmd+Shift+${key}`, "danger", "Screenshots are not permitted.");
+        flag("screenshot_shortcut", `Mac screenshot: Cmd+Shift+${key}`);
         return;
       }
       if (key === "S" && shift && e.getModifierState?.("Meta")) {
-        flag("screenshot_shortcut", "Win+Shift+S screenshot blocked", "danger", "Screenshots are not permitted.");
+        flag("screenshot_shortcut", "Win+Shift+S screenshot blocked");
         return;
       }
       if (
@@ -181,7 +137,7 @@ export function Proctoring({ token }: { token: string }) {
         (ctrl && shift && ["i", "I", "j", "J", "c", "C"].includes(key))
       ) {
         e.preventDefault();
-        flag("devtools_attempt", `DevTools blocked: ${key}`, "danger", "Developer tools are not permitted during the assessment.");
+        flag("devtools_attempt", `DevTools blocked: ${key}`);
         return;
       }
     }
@@ -196,12 +152,7 @@ export function Proctoring({ token }: { token: string }) {
       areaLens.set(t, curr);
       const delta = curr - prev;
       if (delta > 80) {
-        flag(
-          "suspicious_input",
-          `Suspicious large insertion: +${delta} chars`,
-          "danger",
-          `Suspicious input detected (+${delta} chars). Manual typing is required — do not use extensions.`
-        );
+        flag("suspicious_input", `Suspicious large insertion: +${delta} chars`);
       }
     }
 
@@ -215,7 +166,7 @@ export function Proctoring({ token }: { token: string }) {
         e.clientY >= window.innerHeight;
       if (outside) {
         leaveTimer = setTimeout(() => {
-          flag("mouse_left_window", "Mouse left browser viewport", "warn");
+          flag("mouse_left_window", "Mouse left browser viewport");
         }, 800);
       }
     }
@@ -256,68 +207,5 @@ export function Proctoring({ token }: { token: string }) {
     };
   }, [token, flag]);
 
-  if (typeof document === "undefined") return null;
-
-  return createPortal(
-    <>
-      {/* Violation badge */}
-      {violations > 0 && (
-        <div className="fixed top-[68px] right-4 z-[200] flex items-center gap-2 rounded-full bg-red-600/95 backdrop-blur-sm px-3 py-1.5 text-xs font-bold text-white shadow-xl border border-red-400/30 select-none">
-          <span className="relative flex h-2 w-2 shrink-0">
-            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-300 opacity-75" />
-            <span className="relative inline-flex rounded-full h-2 w-2 bg-red-100" />
-          </span>
-          {violations} flag{violations !== 1 ? "s" : ""} recorded
-        </div>
-      )}
-
-      {/* Toast stack */}
-      <div className="fixed bottom-5 right-5 z-[200] flex flex-col-reverse gap-2 max-w-sm pointer-events-none">
-        {toasts.map((t) => (
-          <div
-            key={t.id}
-            className={`animate-slide-up rounded-xl px-4 py-3 text-sm shadow-2xl backdrop-blur-sm border pointer-events-auto select-none ${
-              t.severity === "danger"
-                ? "bg-red-950/97 text-red-100 border-red-700/50 shadow-red-900/40"
-                : t.severity === "warn"
-                ? "bg-orange-950/97 text-orange-100 border-orange-700/50 shadow-orange-900/40"
-                : "bg-neutral-900/97 text-neutral-100 border-neutral-700/50"
-            }`}
-          >
-            <div className="flex items-start gap-2.5">
-              <span className="text-base mt-0.5 shrink-0">
-                {t.severity === "danger" ? "🚫" : "⚠️"}
-              </span>
-              <span className="font-medium leading-snug">{t.message}</span>
-            </div>
-          </div>
-        ))}
-      </div>
-
-      {/* Critical violation modal */}
-      {showCriticalModal && (
-        <div className="fixed inset-0 z-[300] flex items-center justify-center p-6 bg-black/80 backdrop-blur-sm">
-          <div className="max-w-md w-full rounded-2xl bg-red-950 border border-red-700/60 p-7 shadow-2xl text-center space-y-4">
-            <div className="text-4xl">🚨</div>
-            <h2 className="text-xl font-bold text-red-200">Integrity Warning</h2>
-            <p className="text-red-300 text-sm leading-relaxed">
-              Multiple violations have been recorded during this assessment.
-              Continued suspicious activity will result in automatic disqualification.
-              All flags are reviewed by the hiring team.
-            </p>
-            <p className="text-red-400/70 text-xs">
-              {violations} security events recorded so far.
-            </p>
-            <button
-              onClick={() => setShowCriticalModal(false)}
-              className="rounded-lg bg-red-700 hover:bg-red-600 px-5 py-2.5 text-sm font-semibold text-white transition-colors"
-            >
-              I understand — continue assessment
-            </button>
-          </div>
-        </div>
-      )}
-    </>,
-    document.body
-  );
+  return null;
 }
