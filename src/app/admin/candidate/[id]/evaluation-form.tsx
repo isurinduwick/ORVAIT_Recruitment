@@ -154,17 +154,19 @@ export function EvaluationForm({
             ) : "Save evaluation"}
           </button>
 
-          {/* Delete — separate server action form */}
-          <form action={deleteCandidate}>
-            <input type="hidden" name="id" value={id} />
-            {jobRoleId && <input type="hidden" name="job_role_id" value={jobRoleId} />}
-            <button
-              type="submit"
-              className="text-xs text-gray-400 dark:text-neutral-600 hover:text-red-500 dark:hover:text-red-400 transition-colors"
-            >
-              Delete candidate
-            </button>
-          </form>
+          <button
+            type="button"
+            disabled={isPending}
+            onClick={() => {
+              const fd = new FormData();
+              fd.append("id", id);
+              if (jobRoleId) fd.append("job_role_id", jobRoleId);
+              startTransition(() => deleteCandidate(fd));
+            }}
+            className="text-xs text-gray-400 dark:text-neutral-600 hover:text-red-500 dark:hover:text-red-400 transition-colors"
+          >
+            Delete candidate
+          </button>
         </div>
       </form>
     </div>

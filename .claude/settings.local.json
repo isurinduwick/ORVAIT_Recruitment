@@ -3,7 +3,8 @@
     "allow": [
       "Bash(npm install *)",
       "Bash(npx tsc *)",
-      "Bash(npx next *)"
+      "Bash(npx next *)",
+      "PowerShell(Copy-Item \"c:\\\\Users\\\\User\\\\Desktop\\\\ORVAIT_Recruitment\\\\public\\\\Logo.png\" \"c:\\\\Users\\\\User\\\\Desktop\\\\ORVAIT_Recruitment\\\\src\\\\app\\\\icon.png\" -Force)"
     ]
   }
 }
