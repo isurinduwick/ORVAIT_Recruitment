@@ -1,8 +1,62 @@
 "use client";
 
 import { useState, useRef, useEffect } from "react";
+import Image from "next/image";
 
 type Message = { role: "user" | "model"; content: string };
+
+function parseBold(text: string): React.ReactNode[] {
+  const parts = text.split(/\*\*(.*?)\*\*/g);
+  return parts.map((part, i) =>
+    i % 2 === 1
+      ? <strong key={i} className="font-semibold text-gray-900 dark:text-neutral-100">{part}</strong>
+      : part
+  );
+}
+
+function renderContent(text: string) {
+  const lines = text.split("\n");
+  const nodes: React.ReactNode[] = [];
+  let i = 0;
+  while (i < lines.length) {
+    const line = lines[i];
+    if (line.trim() === "") {
+      nodes.push(<div key={i} className="h-1.5" />);
+    } else if (/^#{1,3}\s/.test(line)) {
+      const content = line.replace(/^#{1,3}\s/, "");
+      nodes.push(
+        <p key={i} className="font-semibold text-gray-900 dark:text-neutral-100 text-[13px] mt-1">
+          {parseBold(content)}
+        </p>
+      );
+    } else if (/^[-*•]\s/.test(line)) {
+      nodes.push(
+        <div key={i} className="flex gap-2 items-start">
+          <span className="text-emerald-500 font-bold mt-px shrink-0 text-[11px]">•</span>
+          <span className="text-[13px] leading-relaxed">{parseBold(line.replace(/^[-*•]\s/, ""))}</span>
+        </div>
+      );
+    } else if (/^\d+\.\s/.test(line)) {
+      const match = line.match(/^(\d+)\.\s(.*)$/);
+      if (match) {
+        nodes.push(
+          <div key={i} className="flex gap-2 items-start">
+            <span className="text-emerald-500 font-semibold shrink-0 text-[12px] min-w-[16px]">{match[1]}.</span>
+            <span className="text-[13px] leading-relaxed">{parseBold(match[2])}</span>
+          </div>
+        );
+      }
+    } else {
+      nodes.push(
+        <p key={i} className="text-[13px] leading-relaxed">
+          {parseBold(line)}
+        </p>
+      );
+    }
+    i++;
+  }
+  return nodes;
+}
 
 const SUGGESTIONS = [
   "Who scored the highest overall?",
@@ -58,27 +112,66 @@ export function AdminChatbot() {
   return (
     <>
       {/* Floating button */}
-      <button
-        onClick={() => setOpen((o) => !o)}
-        className="fixed bottom-6 right-6 z-40 flex items-center gap-2.5 rounded-2xl bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-400 hover:to-teal-400 text-white px-4 py-3 shadow-xl shadow-emerald-500/35 hover:shadow-emerald-500/50 transition-all duration-300 hover:scale-105 active:scale-95"
-        aria-label="Open recruitment AI"
-      >
-        {open ? (
-          <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-            <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
-          </svg>
-        ) : (
-          <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.8}>
-            <path strokeLinecap="round" strokeLinejoin="round" d="M9.813 15.904L9 18.75l-.813-2.846a4.5 4.5 0 00-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 003.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 003.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 00-3.09 3.09z" />
-          </svg>
-        )}
-        <span className="text-sm font-semibold">{open ? "Close" : "Ask AI"}</span>
-        {!!unread && (
-          <span className="absolute -top-1.5 -right-1.5 w-5 h-5 rounded-full bg-red-500 text-white text-[10px] font-bold flex items-center justify-center shadow-sm">
-            {unread}
+      <div className="fixed bottom-6 right-6 z-40 group">
+
+        {/* Tooltip */}
+        <div className="absolute bottom-full right-0 mb-3 pointer-events-none opacity-0 group-hover:opacity-100 translate-y-1 group-hover:translate-y-0 transition-all duration-200">
+          <div className="bg-gray-900 text-white text-[11px] font-semibold px-3 py-1.5 rounded-xl whitespace-nowrap shadow-lg">
+            Recruitment AI
+            <span className="absolute top-full right-4 border-4 border-transparent border-t-gray-900" />
+          </div>
+        </div>
+
+        <button
+          onClick={() => setOpen((o) => !o)}
+          className="relative w-14 h-14 rounded-full flex items-center justify-center transition-all duration-300 hover:scale-110 active:scale-95"
+          aria-label="Open recruitment AI"
+        >
+          {/* Idle pulse ring */}
+          {!open && (
+            <span
+              className="absolute inset-0 rounded-full bg-emerald-500/15 animate-ping"
+              style={{ animationDuration: "2.5s" }}
+            />
+          )}
+
+          {/* Slow orbit rings */}
+          <span
+            className="absolute inset-0 rounded-full border border-emerald-500/25 animate-spin"
+            style={{ animationDuration: "9s" }}
+          />
+          <span
+            className="absolute inset-[4px] rounded-full border border-violet-500/15 animate-spin"
+            style={{ animationDuration: "6s", animationDirection: "reverse" }}
+          />
+
+          {/* Dark glass background */}
+          <span className="absolute inset-0 rounded-full bg-gradient-to-br from-neutral-900 via-[#0c1a10] to-neutral-900 shadow-2xl shadow-emerald-500/20 group-hover:shadow-emerald-500/40 border border-emerald-500/20 group-hover:border-emerald-500/35 transition-all duration-300" />
+
+          {/* Inner radial glow */}
+          <span className="absolute inset-0 rounded-full bg-[radial-gradient(circle_at_40%_35%,rgba(16,185,129,0.15),transparent_65%)]" />
+
+          {/* Icon */}
+          <span className="relative z-10 transition-transform duration-300 group-hover:scale-110">
+            {open ? (
+              <svg className="w-5 h-5 text-neutral-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            ) : (
+              <svg className="w-6 h-6 text-emerald-400 drop-shadow-[0_0_6px_rgba(52,211,153,0.8)]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M9.813 15.904L9 18.75l-.813-2.846a4.5 4.5 0 00-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 003.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 003.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 00-3.09 3.09z" />
+              </svg>
+            )}
           </span>
-        )}
-      </button>
+
+          {/* Unread badge */}
+          {!!unread && (
+            <span className="absolute -top-1 -right-1 z-20 w-5 h-5 rounded-full bg-red-500 text-white text-[10px] font-bold flex items-center justify-center shadow-md ring-2 ring-white dark:ring-neutral-900">
+              {unread}
+            </span>
+          )}
+        </button>
+      </div>
 
       {/* Chat panel */}
       <div
@@ -90,15 +183,20 @@ export function AdminChatbot() {
         {/* Header */}
         <div className="flex items-center justify-between px-4 py-3.5 border-b border-gray-100 dark:border-neutral-800 shrink-0">
           <div className="flex items-center gap-3">
-            <div className="relative w-9 h-9 rounded-xl bg-gradient-to-br from-emerald-500 to-teal-500 flex items-center justify-center shadow-sm shadow-emerald-500/30 shrink-0">
-              <svg className="w-4.5 h-4.5 text-white w-[18px] h-[18px]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.8}>
-                <path strokeLinecap="round" strokeLinejoin="round" d="M9.813 15.904L9 18.75l-.813-2.846a4.5 4.5 0 00-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 003.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 003.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 00-3.09 3.09z" />
-              </svg>
-              <span className="absolute -bottom-0.5 -right-0.5 w-2.5 h-2.5 rounded-full bg-emerald-400 border-2 border-white dark:border-neutral-900" />
+            {/* Company logo + AI badge */}
+            <div className="relative shrink-0">
+              <div className="w-9 h-9 rounded-xl bg-white dark:bg-neutral-800 border border-gray-200 dark:border-neutral-700 flex items-center justify-center overflow-hidden shadow-sm">
+                <Image src="/Logo.png" alt="Company logo" width={28} height={28} className="object-contain" />
+              </div>
+              <div className="absolute -bottom-1 -right-1 w-4 h-4 rounded-full bg-gradient-to-br from-emerald-500 to-teal-500 flex items-center justify-center border-2 border-white dark:border-neutral-900">
+                <svg className="w-2 h-2 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M9.813 15.904L9 18.75l-.813-2.846a4.5 4.5 0 00-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 003.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 003.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 00-3.09 3.09z" />
+                </svg>
+              </div>
             </div>
             <div>
               <p className="text-sm font-bold text-gray-900 dark:text-neutral-100 leading-none">Recruitment AI</p>
-              <p className="text-[10px] text-emerald-600 dark:text-emerald-400 font-medium mt-0.5">Powered by Gemini · Live data</p>
+              <p className="text-[10px] text-emerald-600 dark:text-emerald-400 font-medium mt-0.5">Powered by Groq · Live data</p>
             </div>
           </div>
           <div className="flex items-center gap-1">
@@ -158,35 +256,37 @@ export function AdminChatbot() {
             </div>
           ) : (
             <>
-              {messages.map((m, i) => (
-                <div key={i} className={`flex gap-2 ${m.role === "user" ? "justify-end" : "justify-start"}`}>
-                  {m.role === "model" && (
-                    <div className="w-6 h-6 rounded-lg bg-gradient-to-br from-emerald-500 to-teal-500 flex items-center justify-center shrink-0 mt-0.5">
+              {messages.map((m, i) =>
+                m.role === "user" ? (
+                  /* User bubble — right-aligned, compact */
+                  <div key={i} className="flex justify-end">
+                    <div className="max-w-[75%] bg-emerald-500 text-white rounded-2xl rounded-tr-sm px-3.5 py-2.5 text-[13px] leading-relaxed shadow-sm shadow-emerald-500/20">
+                      {m.content}
+                    </div>
+                  </div>
+                ) : (
+                  /* AI message — full width, left-aligned with markdown */
+                  <div key={i} className="flex gap-2.5 items-start">
+                    <div className="w-6 h-6 rounded-lg bg-gradient-to-br from-emerald-500 to-teal-500 flex items-center justify-center shrink-0 mt-0.5 shadow-sm shadow-emerald-500/30">
                       <svg className="w-3 h-3 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                         <path strokeLinecap="round" strokeLinejoin="round" d="M9.813 15.904L9 18.75l-.813-2.846a4.5 4.5 0 00-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 003.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 003.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 00-3.09 3.09z" />
                       </svg>
                     </div>
-                  )}
-                  <div
-                    className={`max-w-[82%] rounded-2xl px-3.5 py-2.5 text-[13px] leading-relaxed whitespace-pre-wrap ${
-                      m.role === "user"
-                        ? "bg-emerald-500 text-white rounded-tr-sm"
-                        : "bg-gray-100 dark:bg-neutral-800 text-gray-800 dark:text-neutral-200 rounded-tl-sm"
-                    }`}
-                  >
-                    {m.content}
+                    <div className="flex-1 min-w-0 bg-gray-50 dark:bg-neutral-800/60 rounded-2xl rounded-tl-sm px-3.5 py-3 border border-gray-100 dark:border-neutral-700/50 text-gray-700 dark:text-neutral-300 space-y-0.5">
+                      {renderContent(m.content)}
+                    </div>
                   </div>
-                </div>
-              ))}
+                )
+              )}
 
               {loading && (
-                <div className="flex gap-2 justify-start">
-                  <div className="w-6 h-6 rounded-lg bg-gradient-to-br from-emerald-500 to-teal-500 flex items-center justify-center shrink-0">
+                <div className="flex gap-2.5 items-start">
+                  <div className="w-6 h-6 rounded-lg bg-gradient-to-br from-emerald-500 to-teal-500 flex items-center justify-center shrink-0 shadow-sm shadow-emerald-500/30">
                     <svg className="w-3 h-3 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                       <path strokeLinecap="round" strokeLinejoin="round" d="M9.813 15.904L9 18.75l-.813-2.846a4.5 4.5 0 00-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 003.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 003.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 00-3.09 3.09z" />
                     </svg>
                   </div>
-                  <div className="bg-gray-100 dark:bg-neutral-800 rounded-2xl rounded-tl-sm px-4 py-3 flex items-center gap-1.5">
+                  <div className="bg-gray-50 dark:bg-neutral-800/60 border border-gray-100 dark:border-neutral-700/50 rounded-2xl rounded-tl-sm px-4 py-3 flex items-center gap-1.5">
                     {[0, 150, 300].map((delay) => (
                       <span
                         key={delay}
