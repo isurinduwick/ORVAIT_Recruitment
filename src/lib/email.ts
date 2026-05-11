@@ -31,7 +31,7 @@ export async function sendInviteEmail({
     htmlContent: `
       <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; max-width: 560px; margin: 0 auto; background: #fff; padding: 40px 32px; border-radius: 12px;">
         <div style="margin: 0 0 24px;">
-          <span style="font-size: 20px; font-weight: 800; color: #059669; letter-spacing: -0.5px;">ORVAIT</span>
+          <span style="font-size: 20px; font-weight: 800; color: #0D1F40; letter-spacing: -0.5px;">ORVAIT</span>
         </div>
         <h2 style="margin: 0 0 8px; font-size: 22px; color: #111;">Hi ${candidateName},</h2>
         <p style="color: #555; line-height: 1.6; margin: 0 0 20px;">
