@@ -123,7 +123,7 @@ export default async function Questionnaire({
         ),
         iconBg: "bg-emerald-500/10 border-emerald-500/20",
         label: "Time Limit",
-        text: (<>You have <strong className="text-white font-semibold">{TIME_LIMIT_MINUTES} minutes</strong> from the moment you click Start</>),
+        text: (<>You have <strong className="text-gray-900 dark:text-white font-semibold">{TIME_LIMIT_MINUTES} minutes</strong> from the moment you click Start</>),
       },
       {
         iconEl: (
@@ -133,7 +133,7 @@ export default async function Questionnaire({
         ),
         iconBg: "bg-sky-500/10 border-sky-500/20",
         label: "Questions",
-        text: (<><strong className="text-white font-semibold">{nonOptionalCount} required questions</strong> plus salary expectation</>),
+        text: (<><strong className="text-gray-900 dark:text-white font-semibold">{nonOptionalCount} required questions</strong> plus salary expectation</>),
       },
       {
         iconEl: (
@@ -166,7 +166,7 @@ export default async function Questionnaire({
     ];
 
     return (
-      <main className="min-h-screen bg-[#080c0a] text-neutral-100 flex items-center justify-center px-4 py-12 relative overflow-hidden">
+      <main className="min-h-screen bg-gray-50 dark:bg-[#080c0a] text-gray-900 dark:text-neutral-100 flex items-center justify-center px-4 py-12 relative overflow-hidden">
         {/* Ambient background glow */}
         <div className="pointer-events-none absolute inset-0">
           <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[700px] h-[350px] rounded-full bg-emerald-900/20 blur-3xl" />
@@ -185,32 +185,32 @@ export default async function Questionnaire({
                   <path strokeLinecap="round" strokeLinejoin="round" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
                 </svg>
               </div>
-              <span className="text-[11px] font-bold tracking-[0.2em] uppercase text-neutral-500">ORVAIT</span>
+              <span className="text-[11px] font-bold tracking-[0.2em] uppercase text-gray-500 dark:text-neutral-500">ORVAIT</span>
             </div>
 
             {/* Proctored badge */}
             <div>
-              <span className="inline-flex items-center gap-2 px-3.5 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-[10px] font-bold tracking-[0.18em] uppercase">
-                <span className="h-1.5 w-1.5 rounded-full bg-emerald-400 animate-pulse" />
+              <span className="inline-flex items-center gap-2 px-3.5 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-emerald-600 dark:text-emerald-400 text-[10px] font-bold tracking-[0.18em] uppercase">
+                <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 dark:bg-emerald-400 animate-pulse" />
                 Proctored Assessment
               </span>
             </div>
 
             <div>
-              <h1 className="text-[28px] font-bold text-white tracking-tight leading-tight">{roleTitle}</h1>
-              <p className="text-neutral-500 text-sm mt-1.5">
-                Welcome, <span className="text-neutral-300 font-medium">{candidate.name}</span>
+              <h1 className="text-[28px] font-bold text-gray-900 dark:text-white tracking-tight leading-tight">{roleTitle}</h1>
+              <p className="text-gray-500 dark:text-neutral-500 text-sm mt-1.5">
+                Welcome, <span className="text-gray-800 dark:text-neutral-300 font-medium">{candidate.name}</span>
               </p>
             </div>
           </div>
 
           {/* Main card */}
-          <div className="rounded-2xl border border-white/[0.07] bg-white/[0.025] backdrop-blur-md shadow-[0_32px_64px_rgba(0,0,0,0.5)] overflow-hidden">
+          <div className="rounded-2xl border border-gray-200 dark:border-white/[0.07] bg-white dark:bg-white/[0.025] shadow-xl dark:shadow-[0_32px_64px_rgba(0,0,0,0.5)] overflow-hidden">
             {/* Top gradient accent */}
             <div className="h-px w-full bg-gradient-to-r from-transparent via-emerald-500/50 to-transparent" />
 
             <div className="p-6 space-y-5">
-              <p className="text-neutral-400 text-[13px] leading-relaxed">
+              <p className="text-gray-500 dark:text-neutral-400 text-[13px] leading-relaxed">
                 This questionnaire covers your knowledge, approach to work, and salary expectations.
                 Once started, the timer cannot be paused.
               </p>
@@ -220,14 +220,14 @@ export default async function Questionnaire({
                 {rules.map((r, i) => (
                   <div
                     key={i}
-                    className="flex items-center gap-3.5 rounded-xl border border-white/[0.05] bg-white/[0.02] px-4 py-3 hover:bg-white/[0.04] transition-colors duration-150"
+                    className="flex items-center gap-3.5 rounded-xl border border-gray-200 dark:border-white/[0.05] bg-gray-50 dark:bg-white/[0.02] px-4 py-3 hover:bg-gray-100 dark:hover:bg-white/[0.04] transition-colors duration-150"
                   >
                     <div className={`shrink-0 w-8 h-8 rounded-lg border flex items-center justify-center ${r.iconBg}`}>
                       {r.iconEl}
                     </div>
                     <div className="min-w-0">
-                      <p className="text-[10px] font-bold uppercase tracking-widest text-neutral-600 mb-0.5">{r.label}</p>
-                      <p className="text-[13px] text-neutral-300 leading-snug">{r.text}</p>
+                      <p className="text-[10px] font-bold uppercase tracking-widest text-gray-500 dark:text-neutral-600 mb-0.5">{r.label}</p>
+                      <p className="text-[13px] text-gray-700 dark:text-neutral-300 leading-snug">{r.text}</p>
                     </div>
                   </div>
                 ))}
@@ -241,7 +241,7 @@ export default async function Questionnaire({
                       <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
                     </svg>
                   </div>
-                  <p className="text-[10px] font-bold text-amber-300 uppercase tracking-widest">Integrity Notice</p>
+                  <p className="text-[10px] font-bold text-amber-700 dark:text-amber-300 uppercase tracking-widest">Integrity Notice</p>
                   <div className="ml-auto flex items-center gap-1.5 shrink-0">
                     <span className="h-1.5 w-1.5 rounded-full bg-amber-400 animate-pulse" />
                     <span className="text-[10px] text-amber-500/80 font-semibold">Monitoring Active</span>
@@ -253,7 +253,7 @@ export default async function Questionnaire({
                       <svg className="w-3 h-3 text-amber-500/60 shrink-0 mt-0.5" fill="currentColor" viewBox="0 0 20 20">
                         <path fillRule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clipRule="evenodd" />
                       </svg>
-                      <span className="text-[12px] text-amber-200/65 leading-relaxed">{item}</span>
+                      <span className="text-[12px] text-amber-800/80 dark:text-amber-200/65 leading-relaxed">{item}</span>
                     </li>
                   ))}
                 </ul>
@@ -274,7 +274,7 @@ export default async function Questionnaire({
             </div>
 
             {/* Bottom hairline */}
-            <div className="h-px w-full bg-gradient-to-r from-transparent via-white/5 to-transparent" />
+            <div className="h-px w-full bg-gradient-to-r from-transparent via-gray-200 dark:via-white/5 to-transparent" />
           </div>
 
           <p className="text-center text-[11px] text-neutral-700 mt-5">
@@ -472,8 +472,8 @@ function QuestionItem({
 }) {
   const accentColor =
     section === "knowledge"
-      ? "bg-blue-500/15 text-blue-300 border-blue-500/20"
-      : "bg-violet-500/15 text-violet-300 border-violet-500/20";
+      ? "bg-blue-100 dark:bg-blue-500/15 text-blue-600 dark:text-blue-300 border-blue-300 dark:border-blue-500/20"
+      : "bg-violet-100 dark:bg-violet-500/15 text-violet-600 dark:text-violet-300 border-violet-300 dark:border-violet-500/20";
 
   return (
     <li className="rounded-2xl border border-gray-200 dark:border-neutral-800 bg-white dark:bg-neutral-900/60 overflow-hidden">

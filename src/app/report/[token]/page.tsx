@@ -538,11 +538,11 @@ function ScoreCard({
   large?: boolean;
 }) {
   const textColors: Record<string, string> = {
-    emerald: "text-emerald-500",
-    blue:    "text-blue-400",
-    amber:   "text-amber-400",
-    red:     "text-red-400",
-    neutral: "text-neutral-200",
+    emerald: "text-emerald-600 dark:text-emerald-500",
+    blue:    "text-blue-600 dark:text-blue-400",
+    amber:   "text-amber-600 dark:text-amber-400",
+    red:     "text-red-600 dark:text-red-400",
+    neutral: "text-gray-900 dark:text-neutral-100",
   };
   return (
     <div className="bg-white dark:bg-neutral-900 border border-gray-200 dark:border-neutral-800 rounded-xl p-4 flex flex-col justify-between">

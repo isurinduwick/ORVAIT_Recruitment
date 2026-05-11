@@ -2,9 +2,9 @@ import Link from "next/link";
 
 export default function Home() {
   return (
-    <main className="min-h-screen bg-gradient-to-br from-slate-950 via-neutral-950 to-slate-950 text-neutral-100 relative overflow-hidden">
+    <main className="min-h-screen bg-gradient-to-br from-slate-50 via-neutral-50 to-slate-100 dark:from-slate-950 dark:via-neutral-950 dark:to-slate-950 text-gray-900 dark:text-neutral-100 relative overflow-hidden">
       {/* Subtle background pattern */}
-      <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_50%,rgba(16,185,129,0.05),transparent_50%)] pointer-events-none"></div>
+      <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_50%,rgba(16,185,129,0.07),transparent_50%)] dark:bg-[radial-gradient(circle_at_50%_50%,rgba(16,185,129,0.05),transparent_50%)] pointer-events-none"></div>
 
       <div className="relative container mx-auto px-6 py-16">
         {/* Hero Section */}
@@ -14,7 +14,7 @@ export default function Home() {
             <h1 className="text-6xl md:text-7xl font-extrabold bg-gradient-to-r from-emerald-300 via-teal-300 to-cyan-300 bg-clip-text text-transparent tracking-tight">
               ORVAIT
             </h1>
-            <p className="text-2xl md:text-3xl text-neutral-200 font-light tracking-wide">
+            <p className="text-2xl md:text-3xl text-gray-600 dark:text-neutral-200 font-light tracking-wide">
               Advanced Recruitment Technology
             </p>
             <div className="w-24 h-1 bg-gradient-to-r from-emerald-500 to-teal-500 rounded-full mx-auto opacity-80"></div>
@@ -22,7 +22,7 @@ export default function Home() {
 
           {/* Description */}
           <div className="max-w-3xl mx-auto space-y-6">
-            <p className="text-xl text-neutral-300 leading-relaxed font-light">
+            <p className="text-xl text-gray-600 dark:text-neutral-300 leading-relaxed font-light">
               Revolutionizing recruitment with advanced proctoring technology and comprehensive assessment tools for all professional roles.
             </p>
           </div>
@@ -43,13 +43,13 @@ export default function Home() {
 
           {/* Candidate Note */}
           <div className="mt-16 max-w-2xl mx-auto">
-            <div className="p-8 bg-gradient-to-r from-neutral-900/80 to-slate-900/80 rounded-2xl border border-neutral-700/50 backdrop-blur-xl shadow-2xl shadow-black/50">
+            <div className="p-8 bg-white/80 dark:bg-gradient-to-r dark:from-neutral-900/80 dark:to-slate-900/80 rounded-2xl border border-gray-200 dark:border-neutral-700/50 backdrop-blur-xl shadow-xl shadow-gray-200/50 dark:shadow-black/50">
               <div className="flex items-center justify-center space-x-3 mb-3">
-                <div className="w-2 h-2 bg-emerald-400 rounded-full animate-pulse"></div>
-                <span className="text-sm font-semibold text-emerald-400 uppercase tracking-wider">For Candidates</span>
-                <div className="w-2 h-2 bg-emerald-400 rounded-full animate-pulse"></div>
+                <div className="w-2 h-2 bg-emerald-500 dark:bg-emerald-400 rounded-full animate-pulse"></div>
+                <span className="text-sm font-semibold text-emerald-600 dark:text-emerald-400 uppercase tracking-wider">For Candidates</span>
+                <div className="w-2 h-2 bg-emerald-500 dark:bg-emerald-400 rounded-full animate-pulse"></div>
               </div>
-              <p className="text-neutral-300 leading-relaxed">
+              <p className="text-gray-600 dark:text-neutral-300 leading-relaxed">
                 Please use the unique assessment link provided in your email invitation.
               </p>
             </div>

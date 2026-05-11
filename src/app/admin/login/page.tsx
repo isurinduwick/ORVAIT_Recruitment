@@ -18,7 +18,7 @@ export default async function Login({
   if (await isAdmin()) redirect("/admin");
   const sp = await searchParams;
   return (
-    <main className="min-h-screen w-full bg-gradient-to-br from-slate-950 via-neutral-950 to-slate-900 dark:from-slate-950 dark:via-neutral-950 dark:to-slate-900 text-neutral-900 dark:text-neutral-100 relative overflow-hidden">
+    <main className="min-h-screen w-full bg-gradient-to-br from-slate-50 via-neutral-50 to-slate-100 dark:from-slate-950 dark:via-neutral-950 dark:to-slate-900 text-neutral-900 dark:text-neutral-100 relative overflow-hidden">
       {/* Animated background elements */}
       <div className="absolute inset-0 pointer-events-none">
         <div className="absolute top-0 left-1/4 w-96 h-96 bg-emerald-500/10 rounded-full blur-3xl animate-pulse"></div>
@@ -32,7 +32,7 @@ export default async function Login({
           <div className="text-center space-y-4 mb-8">
             <div className="inline-block">
               <div className="text-5xl md:text-6xl font-black tracking-tighter">
-                <span className="bg-gradient-to-r from-emerald-400 via-teal-400 to-cyan-400 dark:from-emerald-300 dark:via-teal-300 dark:to-cyan-300 bg-clip-text text-transparent">ORVAIT</span>
+                <span className="bg-gradient-to-r from-emerald-600 via-teal-600 to-cyan-600 dark:from-emerald-300 dark:via-teal-300 dark:to-cyan-300 bg-clip-text text-transparent">ORVAIT</span>
               </div>
             </div>
             <p className="text-sm font-semibold tracking-widest text-emerald-500 dark:text-emerald-400 uppercase">Administration Portal</p>
@@ -42,7 +42,7 @@ export default async function Login({
           {/* Form Container */}
           <div className="relative">
             <div className="absolute inset-0 bg-gradient-to-r from-emerald-500/10 to-cyan-500/10 rounded-3xl blur-2xl"></div>
-            <div className="relative bg-white/50 dark:bg-neutral-900/40 backdrop-blur-2xl rounded-3xl border border-white/20 dark:border-neutral-700/50 p-8 shadow-2xl hover:shadow-3xl transition-shadow duration-500">
+            <div className="relative bg-white/80 dark:bg-neutral-900/40 backdrop-blur-2xl rounded-3xl border border-gray-200/80 dark:border-neutral-700/50 p-8 shadow-2xl hover:shadow-3xl transition-shadow duration-500">
               <form action={login} className="space-y-5">
                 {/* Input Group */}
                 <div className="space-y-2">
