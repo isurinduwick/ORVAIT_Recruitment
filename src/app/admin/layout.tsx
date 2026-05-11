@@ -2,6 +2,7 @@ import Link from "next/link";
 import { isAdmin } from "@/lib/auth";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { UserMenu } from "./user-menu";
+import { AdminChatbot } from "@/components/admin-chatbot";
 
 export default async function AdminLayout({
   children,
@@ -46,6 +47,8 @@ export default async function AdminLayout({
           </div>
         </div>
       </div>
+
+      {signedIn && <AdminChatbot />}
     </div>
   );
 }
