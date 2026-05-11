@@ -1,8 +1,146 @@
 "use client";
 
-import { useState, useTransition } from "react";
+import { useState, useTransition, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { createJobRole } from "./actions";
+
+const AI_STEPS = [
+  { text: "Analyzing the role requirements with AI", emoji: "✨" },
+  { text: "Crafting smart interview questions…", emoji: "🤖" },
+  { text: "Generating role-specific assessments…", emoji: "🧠" },
+  { text: "Fine-tuning questions for better candidate evaluation…", emoji: "" },
+  { text: "Creating a personalized question set for your recruitment flow", emoji: "" },
+];
+
+const TOTAL_MS = AI_STEPS.length * 9000;
+
+function AIGeneratingOverlay({ onComplete }: { onComplete: () => void }) {
+  const [step, setStep] = useState(0);
+  const [visible, setVisible] = useState(true);
+  const [progress, setProgress] = useState(0);
+  const onCompleteRef = useRef(onComplete);
+  useEffect(() => { onCompleteRef.current = onComplete; });
+
+  useEffect(() => {
+    const startTime = Date.now();
+
+    // Smooth continuous progress bar
+    const progressTimer = setInterval(() => {
+      const elapsed = Date.now() - startTime;
+      setProgress(Math.min((elapsed / TOTAL_MS) * 100, 99));
+    }, 80);
+
+    // Step cycling
+    let current = 0;
+    const stepTimer = setInterval(() => {
+      setVisible(false);
+      setTimeout(() => {
+        current++;
+        if (current >= AI_STEPS.length) {
+          clearInterval(stepTimer);
+          clearInterval(progressTimer);
+          setProgress(100);
+          onCompleteRef.current();
+          return;
+        }
+        setStep(current);
+        setVisible(true);
+      }, 380);
+    }, 9000);
+
+    return () => {
+      clearInterval(progressTimer);
+      clearInterval(stepTimer);
+    };
+  }, []);
+
+  const cur = AI_STEPS[step];
+
+  return (
+    <div className="absolute inset-0 z-20 rounded-2xl overflow-hidden flex flex-col items-center justify-center">
+
+      {/* Frosted glass backdrop over modal content */}
+      <div className="absolute inset-0 bg-white/80 dark:bg-neutral-900/90 backdrop-blur-xl" />
+
+      {/* Soft radial glow accents */}
+      <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_30%_20%,rgba(16,185,129,0.08),transparent_55%)] pointer-events-none" />
+      <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_75%_80%,rgba(139,92,246,0.07),transparent_55%)] pointer-events-none" />
+
+      {/* Content */}
+      <div className="relative z-10 flex flex-col items-center px-10 w-full">
+
+        {/* Orbit rings */}
+        <div className="relative w-24 h-24 mb-8">
+          <div className="absolute inset-0 rounded-full border border-emerald-400/30 dark:border-emerald-500/25 animate-spin" style={{ animationDuration: "9s" }} />
+          <div className="absolute inset-[6px] rounded-full border border-violet-400/20 dark:border-violet-500/20 animate-spin" style={{ animationDuration: "6s", animationDirection: "reverse" }} />
+          <div className="absolute inset-[12px] rounded-full bg-emerald-400/8 dark:bg-emerald-500/5 animate-ping" style={{ animationDuration: "2.4s" }} />
+          <div className="absolute inset-[12px] rounded-full bg-gradient-to-br from-emerald-500/15 to-violet-500/15 dark:from-emerald-500/20 dark:to-violet-500/20 border border-emerald-400/30 dark:border-emerald-500/25 flex items-center justify-center">
+            <svg className="w-7 h-7 text-emerald-500 dark:text-emerald-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M9.813 15.904L9 18.75l-.813-2.846a4.5 4.5 0 00-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 003.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 003.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 00-3.09 3.09z" />
+            </svg>
+          </div>
+        </div>
+
+        {/* Badge */}
+        <div className="flex items-center gap-2 mb-5">
+          <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse" />
+          <p className="text-[10px] font-bold tracking-[0.22em] uppercase text-emerald-600 dark:text-emerald-500">
+            AI Question Generator · Step {step + 1} / {AI_STEPS.length}
+          </p>
+          <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse" />
+        </div>
+
+        {/* Cycling message */}
+        <div className="min-h-[60px] flex items-center justify-center w-full">
+          <p
+            className="font-semibold text-[17px] text-center leading-snug text-gray-900 dark:text-white transition-all duration-350"
+            style={{
+              opacity: visible ? 1 : 0,
+              transform: visible ? "translateY(0px)" : "translateY(8px)",
+            }}
+          >
+            {cur.text}
+            {cur.emoji && <span className="ml-1.5">{cur.emoji}</span>}
+          </p>
+        </div>
+
+        {/* Progress bar */}
+        <div className="w-full max-w-xs mt-8">
+          <div className="flex justify-between text-[10px] text-gray-400 dark:text-neutral-500 mb-1.5">
+            <span className="font-medium tracking-wide">Generating your question set…</span>
+            <span className="font-semibold tabular-nums">{Math.round(progress)}%</span>
+          </div>
+          <div className="h-1 rounded-full bg-gray-200 dark:bg-neutral-700 overflow-hidden">
+            <div
+              className="h-full rounded-full bg-gradient-to-r from-emerald-500 via-teal-400 to-emerald-400 transition-none"
+              style={{ width: `${progress}%` }}
+            />
+          </div>
+        </div>
+
+        {/* Step dots */}
+        <div className="flex items-center gap-2 mt-6">
+          {AI_STEPS.map((_, i) => (
+            <div
+              key={i}
+              className="rounded-full transition-all duration-500"
+              style={{
+                width: i === step ? "22px" : "6px",
+                height: "6px",
+                background:
+                  i < step
+                    ? "rgba(16,185,129,0.6)"
+                    : i === step
+                    ? "#10b981"
+                    : "rgba(156,163,175,0.4)",
+              }}
+            />
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+}
 
 type Option = { value: string; label: string };
 export type Question = {
@@ -40,6 +178,19 @@ export function CreateRoleModal({ onClose }: { onClose: () => void }) {
   const [questions, setQuestions] = useState<Question[]>([]);
   const [generating, setGenerating] = useState(false);
   const [error, setError] = useState("");
+  const [apiDone, setApiDone] = useState(false);
+  const [animDone, setAnimDone] = useState(false);
+  const [pendingQuestions, setPendingQuestions] = useState<Question[]>([]);
+
+  useEffect(() => {
+    if (apiDone && animDone) {
+      setQuestions((prev) => [...prev, ...pendingQuestions]);
+      setGenerating(false);
+      setApiDone(false);
+      setAnimDone(false);
+      setPendingQuestions([]);
+    }
+  }, [apiDone, animDone, pendingQuestions]);
 
   async function generateWithAI() {
     if (!title.trim()) {
@@ -48,6 +199,9 @@ export function CreateRoleModal({ onClose }: { onClose: () => void }) {
     }
     setError("");
     setGenerating(true);
+    setApiDone(false);
+    setAnimDone(false);
+    setPendingQuestions([]);
     try {
       const res = await fetch("/api/generate-questions", {
         method: "POST",
@@ -64,11 +218,14 @@ export function CreateRoleModal({ onClose }: { onClose: () => void }) {
         correct: q.correct ?? "",
         optional: q.optional ?? false,
       }));
-      setQuestions((prev) => [...prev, ...withIds]);
+      setPendingQuestions(withIds);
+      setApiDone(true);
     } catch (err) {
       setError(`Failed to generate questions. Please try again. (${err instanceof Error ? err.message : String(err)})`);
-    } finally {
       setGenerating(false);
+      setApiDone(false);
+      setAnimDone(false);
+      setPendingQuestions([]);
     }
   }
 
@@ -116,9 +273,10 @@ export function CreateRoleModal({ onClose }: { onClose: () => void }) {
   return (
     <div
       className="fixed inset-0 z-50 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4"
-      onClick={(e) => { if (e.target === e.currentTarget) onClose(); }}
+      onClick={(e) => { if (e.target === e.currentTarget && !generating) onClose(); }}
     >
-      <div className="bg-white dark:bg-neutral-900 rounded-2xl shadow-2xl shadow-black/20 w-full max-w-2xl max-h-[98vh] flex flex-col border border-gray-200/60 dark:border-neutral-700/60">
+      <div className="relative bg-white dark:bg-neutral-900 rounded-2xl shadow-2xl shadow-black/20 w-full max-w-2xl max-h-[98vh] flex flex-col border border-gray-200/60 dark:border-neutral-700/60">
+        {generating && <AIGeneratingOverlay onComplete={() => setAnimDone(true)} />}
 
         {/* Header */}
         <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100 dark:border-neutral-800 shrink-0">
